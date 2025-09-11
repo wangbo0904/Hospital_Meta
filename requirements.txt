@@ -1,0 +1,13 @@
+streamlit
+pandas
+pyarrow
+openpyxl
+jinja2
+pypinyin
+rapidfuzz
+sentence-transformers
+faiss-cpu
+openai
+google-generativeai
+tenacity
+ratelimit 
