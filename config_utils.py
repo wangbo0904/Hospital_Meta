@@ -36,7 +36,8 @@ class Config:
     FINAL_JUDGE_OUTPUT_PARQUET_FILE = os.path.join(RESULTS_DIR, "step5_final_judge_output.parquet")
     ARBITRATION_OUTPUT_JSONL_FILE = os.path.join(RESULTS_DIR, "step6_arbitration_output.jsonl")
     ARBITRATION_OUTPUT_PARQUET_FILE = os.path.join(RESULTS_DIR, "step6_arbitration_output.parquet")
-
+    OUTPUT_REPORT_FILE = os.path.join(RESULTS_DIR, "final_comprehensive_report.html")
+    
     # API and model settings
     OPENAI_BASE_URL = "" 
     OPENAI_API_KEY = ""
