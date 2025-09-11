@@ -210,7 +210,7 @@ elif page == "🚀 执行 & 结果":
     st.markdown("---")
     st.subheader("📊 查看最终报告")
     
-    report_path = dynamic_config.OUTPUT_REPORT_DIR
+    report_path = dynamic_config.OUTPUT_REPORT_FILE
     if os.path.exists(report_path):
         with open(report_path, 'r', encoding='utf-8') as f:
             html_content = f.read()
