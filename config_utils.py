@@ -37,16 +37,16 @@ class Config:
     ARBITRATION_OUTPUT_PARQUET_FILE = os.path.join(RESULTS_DIR, "step6_arbitration_output.parquet")
 
     # API and model settings
-    OPENAI_BASE_URL = "http://116.63.133.80:30660/api/llm/v1"
-    OPENAI_API_KEY = "5YWs5YWx5pWw5o2uLeS4tOW6ig=="
-    GENAI_BASE_URL = "https://globalai.vip/"
-    GENAI_API_KEY = "sk-KEF4EZUbZG2kU3EHshx9ujJrxRkQLF9kb4B9F5mulPAD4igl"
-    API_PROJECT = "PI_SITE"
-    ORGANIZATION = "WB"
-    TRANSLATE_MODEL = "global-gemini-2.5-pro"
-    AI_SELECT_MODEL = "gemini-2.5-flash-lite-nothinking"
-    AI_JUDGE_MODEL = "gemini-2.5-flash-lite-nothinking"
-    ARBITRATE_MODEL = "gemini-2.5-flash-lite-nothinking"
+    OPENAI_BASE_URL = "" 
+    OPENAI_API_KEY = ""
+    GENAI_BASE_URL = ""
+    GENAI_API_KEY = ""
+    API_PROJECT = ""
+    ORGANIZATION = ""
+    TRANSLATE_MODEL = ""
+    AI_SELECT_MODEL = ""
+    AI_JUDGE_MODEL = ""
+    ARBITRATE_MODEL = ""
 
     # Performance and rate limiting
     MAX_WORKERS = 30
