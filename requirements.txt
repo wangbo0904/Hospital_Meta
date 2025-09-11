@@ -8,6 +8,6 @@ rapidfuzz
 sentence-transformers
 faiss-cpu
 openai
-google-generativeai
+google-generativeai 
 tenacity
-ratelimit 
+ratelimit
