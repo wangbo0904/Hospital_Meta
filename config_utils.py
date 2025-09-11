@@ -22,6 +22,7 @@ class Config:
     RAW_PARQUET_FILE = "./data/test.parquet"
     SITE_DICT_FILE = "./data/site_dict_0911.parquet"
     RESULTS_DIR = "./results/"
+    OUTPUT_REPORT_DIR = "./reports/"
     MATCHED_EN_FILE = os.path.join(RESULTS_DIR, "step1_matched_en.parquet")
     UNMATCHED_EN_FILE = os.path.join(RESULTS_DIR, "step1_unmatched_en.parquet")
     TRANSLATED_JSONL_FILE = os.path.join(RESULTS_DIR, "step2_translated.jsonl")
