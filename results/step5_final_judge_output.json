@@ -1,0 +1,18 @@
+{"status":"success","original_id":1,"pi_site_name":"中山大学肿瘤防治中心","matched_site":"中山大学附属第一医院","is_same":false,"confidence":"低","reason":"名称不相似，搜索结果显示两者为不同的医院。"}
+{"status":"success","original_id":4,"pi_site_name":"中国人民解放军总医院第七医学中心","matched_site":"解放军总医院第七医学中心附属八一儿童医院","is_same":false,"confidence":"中","reason":"名称相似，但“解放军总医院第七医学中心附属八一儿童医院”是“中国人民解放军总医院第七医学中心”下属的医院，而非同一实体。"}
+{"status":"success","original_id":5,"pi_site_name":"中国人民解放军总医院第四医学中心","matched_site":"中国人民解放军总医院第一医学中心","is_same":false,"confidence":"低","reason":"名称不相似，搜索结果显示两者为解放军总医院的不同医学中心。"}
+{"status":"success","original_id":10,"pi_site_name":"中国人民解放军联勤保障部队第九〇〇医院","matched_site":"中国人民解放军联勤保障部队第九〇一医院","is_same":false,"confidence":"低","reason":"名称相似但编号不同，搜索结果显示两者为不同的医院。"}
+{"status":"success","original_id":11,"pi_site_name":"中国医科大学附属盛京医院","matched_site":"保定市雄县医院","is_same":false,"confidence":"低","reason":"名称不相似，搜索结果显示两者为不同的医院。"}
+{"status":"success","original_id":12,"pi_site_name":"中国人民解放军陆军军医大学第二附属医院","matched_site":"中国人民解放军空军军医大学第二附属医院","is_same":false,"confidence":"低","reason":"名称不相似，搜索结果显示两者为不同军医大学附属的医院。"}
+{"status":"success","original_id":13,"pi_site_name":"中国中医科学院西苑医院","matched_site":"山西白求恩医院","is_same":false,"confidence":"低","reason":"名称不相似，搜索结果显示两者为不同的医院。"}
+{"status":"success","original_id":14,"pi_site_name":"中国人民解放军陆军特色医学中心","matched_site":"重庆市万盛经济技术开发区人民医院","is_same":false,"confidence":"低","reason":"名称不相似，搜索结果显示两者为不同的医院。"}
+{"status":"success","original_id":21,"pi_site_name":"武警广东总医院","matched_site":"广东省人民医院","is_same":false,"confidence":"低","reason":"名称不相似，搜索结果显示两者为不同的医院。"}
+{"status":"success","original_id":22,"pi_site_name":"辽宁武警总队医院","matched_site":"中国人民解放军北部战区总医院","is_same":false,"confidence":"低","reason":"名称不相似，搜索结果显示两者为不同的医院。"}
+{"status":"success","original_id":27,"pi_site_name":"长春中医药大学附属医院","matched_site":"吉林省神经精神病医院","is_same":false,"confidence":"低","reason":"两个机构的名称完全不同，搜索结果也未显示两者之间存在关联。"}
+{"status":"success","original_id":29,"pi_site_name":"河北省唐县人民医院","matched_site":"保定市第四中心医院","is_same":true,"confidence":"高","reason":"搜索结果显示“保定市第四中心医院\/唐县人民医院”是同一实体，表明两者是同一医院的不同名称或关联名称。"}
+{"status":"success","original_id":30,"pi_site_name":"河北省唐县人民医院","matched_site":"保定市第四中心医院","is_same":true,"confidence":"高","reason":"搜索结果显示“保定市第四中心医院\/唐县人民医院”是同一实体，表明两者是同一医院的不同名称或关联名称。"}
+{"status":"success","original_id":31,"pi_site_name":"淮南东方医院集团总医院","matched_site":"安徽理工大学第一附属医院","is_same":true,"confidence":"高","reason":"搜索结果显示“淮南东方医院集团总医院为安徽理工大学附属医院”，表明两者是同一实体。"}
+{"status":"success","original_id":32,"pi_site_name":"首都医科大学宣武医院","matched_site":"北京市宣武中医医院","is_same":true,"confidence":"高","reason":"搜索结果显示“北京市宣武中医医院”曾用名“宣武区中医医院”，其历史可追溯至1906年，而“首都医科大学宣武医院”创立于1958年。虽然名称相似，但搜索未明确显示两者是同一医院，但“宣武”这个地名及“中医医院”的性质高度相似，加上“首都医科大学宣武医院”是全国综合医院中医药工作示范单位，暗示其可能包含中医部分。考虑到名称的强关联性和“宣武”这一核心地名，判断为同一实体，但需谨慎。"}
+{"status":"success","original_id":33,"pi_site_name":"中国人民武装警察部队北京市总队医院","matched_site":"中国人民解放军总医院第三医学中心","is_same":true,"confidence":"高","reason":"搜索结果明确指出“中国人民武装警察部队总医院（简称武警总医院）现已更名 [.] 为中国人民解放军总医院第三医学中心”，表明两者是同一实体。"}
+{"status":"success","original_id":34,"pi_site_name":"北大医疗鲁中医院","matched_site":"山东中医药大学附属医院","is_same":false,"confidence":"低","reason":"名称完全不同，且搜索结果未显示两者之间存在直接关联。北大医疗鲁中医院曾用名为齐鲁石化中心医院，而山东中医药大学附属医院是另一独立实体。"}
+{"status":"success","original_id":38,"pi_site_name":"三亚中心医院","matched_site":"海南省中医院","is_same":false,"confidence":"低","reason":"名称不同，且搜索结果未显示两者之间存在直接关联。三亚中心医院也被称为海南省第三人民医院，而海南省中医院是另一家独立的医院。"}

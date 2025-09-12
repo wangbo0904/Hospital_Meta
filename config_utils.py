@@ -19,10 +19,10 @@ shutdown_event = threading.Event()
 
 class Config:
     # 文件路径
-    RAW_PARQUET_FILE = "./data/test.parquet"
-    SITE_DICT_FILE = "./data/site_dict_0911.parquet"
-    RESULTS_DIR = "./results/"
-    OUTPUT_REPORT_DIR = "./reports/"
+    RAW_PARQUET_FILE = "./SITE_APP/data/test.parquet"
+    SITE_DICT_FILE = "./SITE_APP/data/site_dict_0911.parquet"
+    RESULTS_DIR = "./SITE_APP/results/"
+    OUTPUT_REPORT_DIR = "./SITE_APP/reports/"
     MATCHED_EN_FILE = os.path.join(RESULTS_DIR, "step1_matched_en.parquet")
     UNMATCHED_EN_FILE = os.path.join(RESULTS_DIR, "step1_unmatched_en.parquet")
     TRANSLATED_JSONL_FILE = os.path.join(RESULTS_DIR, "step2_translated.jsonl")
@@ -36,8 +36,9 @@ class Config:
     FINAL_JUDGE_OUTPUT_PARQUET_FILE = os.path.join(RESULTS_DIR, "step5_final_judge_output.parquet")
     ARBITRATION_OUTPUT_JSONL_FILE = os.path.join(RESULTS_DIR, "step6_arbitration_output.jsonl")
     ARBITRATION_OUTPUT_PARQUET_FILE = os.path.join(RESULTS_DIR, "step6_arbitration_output.parquet")
-    OUTPUT_REPORT_FILE = os.path.join(RESULTS_DIR, "final_comprehensive_report.html")
-    
+    FINAL_REPORT_TEMPLATE_FILE = "./SITE_APP/final_report_template.html" # 假设模板在根目录
+    FINAL_REPORT_OUTPUT_FILE = os.path.join(OUTPUT_REPORT_DIR, "final_comprehensive_report.html")
+
     # API and model settings
     OPENAI_BASE_URL = "" 
     OPENAI_API_KEY = ""
