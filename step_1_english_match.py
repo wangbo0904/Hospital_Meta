@@ -11,8 +11,6 @@
 """
 
 import pandas as pd
-import sys
-sys.path.append('C:/Users/YYMF/PythonProjects/PI&Site/SITE_APP')
 from config_utils import Config, logger
 from pypinyin import pinyin, Style
 

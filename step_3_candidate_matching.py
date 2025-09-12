@@ -17,8 +17,6 @@ import numpy as np
 from rapidfuzz import process, fuzz
 from functools import lru_cache
 from tqdm import tqdm
-import sys
-sys.path.append('C:/Users/YYMF/PythonProjects/PI&Site/SITE_APP')
 from config_utils import Config, logger
 
 def step_3_candidate_matching(config: Config):

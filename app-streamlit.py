@@ -1,255 +1,241 @@
-# app.py
 import streamlit as st
 import pandas as pd
-import os
 import time
-from threading import Thread
-from datetime import datetime
+import os
+from collections import OrderedDict
 
-# 导入所有需要的模块和函数
-from config_utils import Config, logger, BATCH_TRANSLATE_PROMPT, BATCH_AI_SELECT_PROMPT, BATCH_JUDGE_PROMPT, BATCH_ARBITRATE_PROMPT
+# 导入您现有的脚本和配置
+from config_utils import Config, BATCH_AI_SELECT_PROMPT
 from step_1_english_match import step_1_initial_english_match
 from step_2_translate import step_2_translate_unmatched
 from step_3_candidate_matching import step_3_candidate_matching
 from step_4_ai_candidate_selection import step_4_ai_candidate_selection
 from step_5_ai_judgment import step_5_ai_judgment
-from step_6_final_arbitration import step_6_ai_arbitration
-from step_7_generate_final_report import generate_comprehensive_report
+from step_6_generate_final_report import generate_comprehensive_report
 
 # --- 页面配置 ---
 st.set_page_config(
-    page_title="医疗机构名称匹配系统",
-    page_icon="🏥",
+    page_title="PI Site智能匹配AI流水线",
+    page_icon="🤖",
     layout="wide",
+    initial_sidebar_state="expanded",
 )
 
-# --- 会话状态管理 ---
-if 'prompts' not in st.session_state:
-    st.session_state.prompts = {
-        "translate": BATCH_TRANSLATE_PROMPT,
-        "select": BATCH_AI_SELECT_PROMPT,
-        "judge": BATCH_JUDGE_PROMPT,
-        "arbitrate": BATCH_ARBITRATE_PROMPT
+# --- 自定义UI样式，实现“高级感”深色主题 ---
+st.markdown("""
+<style>
+    /* 1. 全局与背景设置 */
+    .stApp {
+        background-color: #111827; /* 主背景：极深炭灰 */
+        color: #D1D5DB; /* 默认文字：柔和浅灰 */
     }
-if 'config' not in st.session_state:
-    st.session_state.config = Config()
-
-# --- 侧边栏 ---
-st.sidebar.title("导航")
-page = st.sidebar.radio("选择一个页面", ["🏠 主页 & 配置", "📝 Prompt 编辑器", "🚀 执行 & 结果"])
-
-# ==============================================================================
-# 会话状态管理 (核心修改)
-# ==============================================================================
-# 使用 st.session_state 来持久化用户的配置
-if 'config' not in st.session_state:
-    # 1. 尝试从 Streamlit secrets 加载密钥
-    try:
-        openai_key = st.secrets["api_keys"]["OPENAI_API_KEY"]
-        genai_key = st.secrets["api_keys"]["GENAI_API_KEY"]
-    except:
-        openai_key = "" # 如果 secrets 中没有，则为空
-        genai_key = ""
-
-    # 2. 初始化一个 Config 对象并存入 session_state
-    #    这里的值将作为用户界面的默认值
-    config = Config()
-    config.OPENAI_API_KEY = openai_key
-    config.GENAI_API_KEY = genai_key
-    # 设置其他默认值
-    config.OPENAI_BASE_URL = "http://116.63.133.80:30660/api/llm/v1"
-    config.GENAI_BASE_URL = "https://globalai.vip/"
-    config.API_PROJECT = "PI_SITE"
-    config.ORGANIZATION = "WB"
-    config.TRANSLATE_MODEL = "global-gemini-2.5-pro"
-    config.AI_SELECT_MODEL = "gemini-2.5-flash-lite-nothinking"
-    config.AI_JUDGE_MODEL = "gemini-2.5-flash-lite-nothinking"
-    config.ARBITRATE_MODEL = "gemini-2.5-flash-lite-nothinking"
-    # ... (其他非敏感配置)
-    st.session_state.config = config
-
-# ... (prompts, data_loaded, results_df 的 session_state 初始化保持不变)
-
-# ==============================================================================
-# 页面一：主页 & 配置 (全新版本)
-# ==============================================================================
-if page == "🏠 主页 & 配置":
-    st.title("🏥 医疗机构名称智能匹配与标准化系统")
-    st.markdown("欢迎使用！请在下方配置您的API信息和文件路径。")
-    st.info("🔑 **安全提示**: 您的API密钥只会保存在当前浏览器会话中，不会被存储或上传。")
-
-    # 从 session_state 中获取当前的配置对象
-    cfg = st.session_state.config
-
-    with st.expander("🔑 API 与模型配置", expanded=True):
-        st.subheader("OpenAI-Compatible API (用于 Step 2)")
-        cfg.OPENAI_BASE_URL = st.text_input("API Base URL", value=cfg.OPENAI_BASE_URL)
-        cfg.OPENAI_API_KEY = st.text_input("API Key", value=cfg.OPENAI_API_KEY, type="password")
-        cfg.TRANSLATE_MODEL = st.text_input("翻译模型名称", value=cfg.TRANSLATE_MODEL)
-
-        st.markdown("---")
-        st.subheader("Google GenAI API (用于 Step 4, 5, 6)")
-        cfg.GENAI_BASE_URL = st.text_input("GenAI Base URL", value=cfg.GENAI_BASE_URL)
-        cfg.GENAI_API_KEY = st.text_input("GenAI API Key", value=cfg.GENAI_API_KEY, type="password")
-        
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            cfg.AI_SELECT_MODEL = st.text_input("选择模型", value=cfg.AI_SELECT_MODEL)
-        with col2:
-            cfg.AI_JUDGE_MODEL = st.text_input("判断模型", value=cfg.AI_JUDGE_MODEL)
-        with col3:
-            cfg.ARBITRATE_MODEL = st.text_input("仲裁模型", value=cfg.ARBITRATE_MODEL)
-
-    with st.expander("📁 文件与性能配置"):
-        cfg.RAW_PARQUET_FILE = st.text_input("原始数据文件路径", value=cfg.RAW_PARQUET_FILE)
-        cfg.SITE_DICT_FILE = st.text_input("机构字典文件路径", value=cfg.SITE_DICT_FILE)
-        cfg.RESULTS_DIR = st.text_input("结果输出目录", value=cfg.RESULTS_DIR)
-        cfg.MAX_WORKERS = st.slider("最大并发数", 1, 50, cfg.MAX_WORKERS)
-        cfg.CANDIDATE_LIMIT = st.slider("模糊匹配候选数量", 5, 50, cfg.CANDIDATE_LIMIT)
-
-    # 每次交互后，Streamlit会自动重新运行，配置会实时保存在 session_state 中
-    st.session_state.config = cfg
     
-    if st.button("✅ 确认配置"):
-        st.success("配置已在当前会话中更新！")
+    /* 2. 侧边栏样式 */
+    [data-testid="stSidebar"] {
+        background-color: #1F2937; /* 侧边栏背景：石墨灰 */
+        border-right: 1px solid rgba(255, 255, 255, 0.1); /* 右侧辉光边框 */
+    }
+    [data-testid="stSidebar"] h1, [data-testid="stSidebar"] h2, [data-testid="stSidebar"] h3 {
+        color: #F9FAFB; /* 侧边栏标题：亮灰白 */
+    }
+    [data-testid="stSidebar"] .st-emotion-cache-16txtl3,
+    [data-testid="stSidebar"] label {
+        color: #D1D5DB; /* 侧边栏标签与文字 */
+    }
+    [data-testid="stSidebarNavCollapseButton"] svg {
+        fill: #D1D5DB; /* 折叠按钮图标 */
+    }
 
-# ==============================================================================
-# 页面二：Prompt 编辑器
-# ==============================================================================
-elif page == "📝 Prompt 编辑器":
-    st.title("📝 Prompt 编辑器")
-    st.info("在这里，您可以实时查看和修改用于AI处理的系统提示词 (Prompt)。修改将保存在当前会话中。")
+    /* 3. 主内容区样式 */
+    .st-emotion-cache-16txtl3 h1, .st-emotion-cache-16txtl3 h2, .st-emotion-cache-16txtl3 h3 {
+        color: #FFFFFF; /* 主内容区标题：纯白，更突出 */
+    }
 
-    prompts = st.session_state.prompts
+    /* 4. 动态与立体效果 */
+    /* 容器的悬浮效果 */
+    .st-emotion-cache-4oy321 {
+        background-color: #1F2937; /* 容器背景：石墨灰 */
+        border: 1px solid rgba(255, 255, 255, 0.1); /* 辉光边框 */
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); /* 更柔和的阴影 */
+        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    }
+    .st-emotion-cache-4oy321:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4); /* 悬停时阴影加深 */
+    }
+
+    /* 按钮的立体效果 */
+    .stButton>button {
+        background-image: linear-gradient(to right, #3B82F6, #2563EB); /* 按钮背景：蓝色渐变 */
+        color: white;
+        font-weight: bold;
+        border-radius: 8px;
+        border: none;
+        padding: 0.75em 1.5em;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+        transition: all 0.2s ease;
+    }
+    .stButton>button:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 12px rgba(59, 130, 246, 0.4); /* 悬停时带颜色的辉光阴影 */
+    }
+    .stButton>button:active {
+        transform: translateY(-1px);
+    }
     
-    with st.expander("Step 2: 翻译 Prompt", expanded=True):
-        prompts['translate'] = st.text_area("Translate Prompt", prompts['translate'], height=400, key="p_trans")
+    /* 输入控件的焦点效果 */
+    [data-testid="stSidebar"] input,
+    [data-testid="stSidebar"] .stSelectbox > div[data-baseweb="select"] {
+        background-color: #374151; /* 输入框背景色 */
+        border-radius: 6px;
+        transition: box-shadow 0.2s ease, border-color 0.2s ease;
+    }
+    [data-testid="stSidebar"] input:focus,
+    [data-testid="stSidebar"] .stSelectbox > div[data-baseweb="select"]:focus-within {
+        border-color: #3B82F6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5); /* 蓝色辉光 */
+    }
+</style>
+""", unsafe_allow_html=True)
 
-    with st.expander("Step 4: AI选择 Prompt"):
-        prompts['select'] = st.text_area("Select Prompt", prompts['select'], height=400, key="p_select")
+# --- 流水线步骤定义 (精简后) ---
+PIPELINE_STEPS = OrderedDict([
+    ("步骤 1: 英文名初步匹配", {"function": step_1_initial_english_match, "dependencies": []}),
+    ("步骤 2: 翻译未匹配项", {"function": step_2_translate_unmatched, "dependencies": ["步骤 1: 英文名初步匹配"]}),
+    ("步骤 3: 候选词匹配", {"function": step_3_candidate_matching, "dependencies": ["步骤 2: 翻译未匹配项"]}),
+    ("步骤 4: AI筛选候选", {"function": step_4_ai_candidate_selection, "dependencies": ["步骤 3: 候选词匹配"]}),
+    ("步骤 5: AI判断不一致项", {"function": step_5_ai_judgment, "dependencies": ["步骤 4: AI筛选候选"]}),
+    ("步骤 6: 生成最终报告", {"function": generate_comprehensive_report, "dependencies": ["步骤 4: AI筛选候选", "步骤 5: AI判断不一致项"]})
+])
+STEP_NAMES = list(PIPELINE_STEPS.keys())
+
+def get_execution_plan(selected_steps):
+    """计算需要运行的完整步骤列表，包括所有依赖项。"""
+    execution_plan = set()
+    for step in selected_steps:
+        execution_plan.add(step)
+        dependencies_to_check = list(PIPELINE_STEPS[step]["dependencies"])
+        while dependencies_to_check:
+            dep = dependencies_to_check.pop(0)
+            if dep not in execution_plan:
+                execution_plan.add(dep)
+                dependencies_to_check.extend(PIPELINE_STEPS[dep]["dependencies"])
+    return [s for s in STEP_NAMES if s in execution_plan]
+
+# --- UI: 左侧配置侧边栏 ---
+with st.sidebar:
+    st.image("https://staticcdn.pharmcube.com/images/activity/logo.png")
+    st.title("PI Site智能匹配")
+    st.info("ℹ️ 您可以使用顶部的'>'图标折叠此侧边栏。")
     
-    with st.expander("Step 5: AI判断 Prompt"):
-        prompts['judge'] = st.text_area("Judge Prompt", prompts['judge'], height=400, key="p_judge")
-        
-    with st.expander("Step 6: AI仲裁 Prompt"):
-        prompts['arbitrate'] = st.text_area("Arbitrate Prompt", prompts['arbitrate'], height=400, key="p_arb")
-
-    st.session_state.prompts = prompts
-    st.success("Prompt 已在当前会话中实时更新。")
-
-# ==============================================================================
-# 页面三：执行 & 结果
-# ==============================================================================
-elif page == "🚀 执行 & 结果":
-    st.title("🚀 执行流水线 & 查看结果")
-
-    # 创建一个动态的配置对象，它会使用 session_state 中最新的 prompts
-    dynamic_config = st.session_state.config
-    dynamic_config.BATCH_TRANSLATE_PROMPT = st.session_state.prompts['translate']
-    dynamic_config.BATCH_AI_SELECT_PROMPT = st.session_state.prompts['select']
-    dynamic_config.BATCH_JUDGE_PROMPT = st.session_state.prompts['judge']
-    dynamic_config.BATCH_ARBITRATE_PROMPT = st.session_state.prompts['arbitrate']
-
-    steps_to_run = st.multiselect(
-        "选择要执行的步骤 (将按顺序运行):",
-        options=[
-            "Step 1: 英文精确匹配",
-            "Step 2: AI 翻译",
-            "Step 3: 候选匹配",
-            "Step 4: AI 候选选择",
-            "Step 5: AI 判断",
-            "Step 6: AI 最终仲裁",
-            "Step 7: 生成最终报告"
-        ],
-        default=[
-            "Step 1: 英文精确匹配",
-            "Step 2: AI 翻译",
-            "Step 3: 候选匹配",
-            "Step 4: AI 候选选择",
-            "Step 5: AI 判断",
-            "Step 6: AI 最终仲裁",
-            "Step 7: 生成最终报告"
-        ]
-    )
-
-    if st.button("🚀 执行所选步骤"):
-        # 确保结果目录存在
-        os.makedirs(dynamic_config.RESULTS_DIR, exist_ok=True)
-        
-        log_area = st.empty()
-        log_messages = ["### 🚀 流水线执行日志\n\n"]
-        
-        def run_step(step_func, step_name):
-            log_messages.append(f"**{datetime.now().strftime('%H:%M:%S')} - 正在执行 {step_name}...**\n")
-            log_area.markdown("".join(log_messages))
-            success = step_func(dynamic_config)
-            if success:
-                log_messages.append(f"**{datetime.now().strftime('%H:%M:%S')} - ✅ {step_name} 完成！**\n\n")
-            else:
-                log_messages.append(f"**{datetime.now().strftime('%H:%M:%S')} - ❌ {step_name} 失败！流水线终止。**\n\n")
-            log_area.markdown("".join(log_messages))
-            return success
-
-        with st.spinner("正在处理..."):
-            pipeline_steps = {
-                "Step 1: 英文精确匹配": step_1_initial_english_match,
-                "Step 2: AI 翻译": step_2_translate_unmatched,
-                "Step 3: 候选匹配": step_3_candidate_matching,
-                "Step 4: AI 候选选择": step_4_ai_candidate_selection,
-                "Step 5: AI 判断": step_5_ai_judgment,
-                "Step 6: AI 最终仲裁": step_6_ai_arbitration,
-                "Step 7: 生成最终报告": generate_comprehensive_report
-            }
-            
-            for step_name in steps_to_run:
-                if not run_step(pipeline_steps[step_name], step_name):
-                    break # 如果任何一步失败，则终止
-        
-        st.success("所选步骤执行完毕！")
-
-    st.markdown("---")
-    st.subheader("📊 查看最终报告")
+    st.header("1. 文件与运行模式")
+    raw_data_file = st.file_uploader("上传原始数据文件", type=['parquet'])
+    dict_file = st.file_uploader("上传机构词典文件", type=['parquet'])
     
-    # 1. 使用在 config_utils.py 中定义的、正确的最终报告文件路径变量
-    report_path = dynamic_config.FINAL_REPORT_OUTPUT_FILE 
-    
-    # 2. 检查报告文件是否存在
-    if os.path.exists(report_path):
-        st.success(f"报告文件已找到: {report_path}")
-        
-        # 3. 读取文件内容并显示
-        try:
-            with open(report_path, 'r', encoding='utf-8') as f:
-                html_content = f.read()
-            
-            st.components.v1.html(html_content, height=800, scrolling=True)
-            
-            # 4. (可选但推荐) 提供下载按钮
-            # 我们需要重新以二进制模式读取文件以供下载
-            with open(report_path, "rb") as file:
-                st.download_button(
-                    label="📥 下载HTML报告",
-                    data=file,
-                    file_name=os.path.basename(report_path), # 使用动态文件名
-                    mime="text/html"
-                )
+    # --- 新增：清理结果的复选框 ---
+    clear_old_results = st.checkbox("清理旧的运行结果 (建议新任务使用)", value=True)
 
-        except Exception as e:
-            st.error(f"读取或显示报告时出错: {e}")
+    st.header("2. 使用者信息")
+    organization = st.text_input("组织名称", value="DefaultOrg")
+
+    st.header("3. 模型选择")
+    translate_model = st.selectbox("翻译模型", ["gemini-2.5-flash-lite-nothinking", "gemini-2.5-flash-lite-preview-06-17-nothinking", "gemini-2.5-flash-lite-thinking"])
+    ai_select_model = st.selectbox("AI筛选模型", ["gemini-2.5-flash-lite-nothinking", "gemini-2.5-pro-c", "gemini-2.5-pro-c-thinking", "gemini-2.5-flash-lite-preview-06-17-nothinking", "gemini-2.5-flash-lite-thinking"])
+    ai_judge_model = st.selectbox("AI判断模型", ["gemini-2.5-flash-lite-nothinking", "gemini-2.5-pro-c", "gemini-2.5-pro-c-thinking", "gemini-2.5-flash-lite-preview-06-17-nothinking", "gemini-2.5-flash-lite-thinking"])
+
+    st.header("4. 批次大小设置")
+    ai_select_batch_size = st.slider("AI筛选批次 (步骤 4)", min_value=1, max_value=100, value=10)
+    ai_judge_batch_size = st.slider("AI判断批次 (步骤 5)", min_value=1, max_value=100, value=10)
+
+    st.header("5. 自定义提示")
+    with st.expander("编辑AI候选筛选提示词"):
+        custom_ai_select_prompt = st.text_area("提示词内容", value=BATCH_AI_SELECT_PROMPT, height=300)
+
+# --- 主应用界面 ---
+st.title("🚀 端到端机构名称匹配流水线")
+st.markdown("请在左侧边栏配置参数、上传文件、选择要运行的步骤，然后启动流水线。")
+
+with st.container(border=True):
+    st.subheader("🛠️ 选择要运行的流水线步骤")
+    st.markdown("选择您想执行的最终步骤。应用将自动运行所有必需的前置步骤。")
+    
+    selected_steps = st.multiselect("选择步骤", options=STEP_NAMES, default=[STEP_NAMES[-1]], label_visibility="collapsed")
+
+if st.button("启动处理流水线", type="primary"):
+    if not raw_data_file or not dict_file:
+        st.error("❌ 请在开始前上传原始数据和机构词典两个文件。")
+    elif not selected_steps:
+        st.warning("⚠️ 请至少选择一个要运行的流水线步骤。")
     else:
-        st.info("尚未生成报告。请在上方选择并执行包含“Step 7: 生成最终报告”的流程来创建报告。")
+        execution_plan = get_execution_plan(selected_steps)
+        if set(execution_plan) != set(selected_steps):
+            st.info(f"ℹ️ 为运行您的选择，将执行以下完整计划：\n" + " -> ".join([f"**{step.split(':')[0]}**" for step in execution_plan]))
 
-    # 5. (可选但推荐) 增加一个独立的“重新生成报告”按钮
-    st.markdown("---")
-    if st.button("🔄 强制重新生成报告"):
-        with st.spinner("正在重新生成报告..."):
-            # 导入并调用报告生成函数
-            from generate_final_report import generate_comprehensive_report
-            success = generate_comprehensive_report(dynamic_config)
-            if success:
-                st.success("报告已重新生成！页面将在一秒后刷新。")
-                # 使用 rerun 来强制刷新页面以显示新报告
-                time.sleep(1)
-                st.rerun()
-            else:
-                st.error("重新生成报告失败，请查看终端日志。")
+        config = Config()
+        
+        # --- 根据复选框决定是否清理结果 ---
+        if clear_old_results:
+            st.info("ℹ️ 正在清理旧的运行结果...")
+            config.clear_results_dir()
+        else:
+            st.warning("⚠️ 未清理旧结果。将尝试使用现有文件并跳过已完成的任务。")
+            
+        raw_data_path = config.DATA_DIR / raw_data_file.name
+        dict_path = config.DATA_DIR / dict_file.name
+        with open(raw_data_path, "wb") as f: f.write(raw_data_file.getbuffer())
+        with open(dict_path, "wb") as f: f.write(dict_file.getbuffer())
+
+        config.update_from_ui({
+            "organization": organization, "translate_model": translate_model,
+            "ai_select_model": ai_select_model, "ai_judge_model": ai_judge_model,
+            "raw_data_file": {"name": raw_data_file.name}, "dict_file": {"name": dict_file.name}
+        })
+        
+        config.AI_SELECT_BATCH_SIZE = ai_select_batch_size
+        config.AI_JUDGE_BATCH_SIZE = ai_judge_batch_size
+        globals()['BATCH_AI_SELECT_PROMPT'] = custom_ai_select_prompt
+        
+        overall_success = True
+        with st.status("🚀 正在启动AI流水线...", expanded=True) as status:
+            total_steps = len(execution_plan)
+            for i, step_name in enumerate(execution_plan):
+                status.update(label=f"正在执行 ({i+1}/{total_steps}): {step_name}...")
+                step_function = PIPELINE_STEPS[step_name]["function"]
+                try:
+                    success = step_function(config)
+                    if not success:
+                        st.error(f"❌ {step_name} 失败。流水线已中止。")
+                        status.update(label=f"流水线在 {step_name} 处失败", state="error")
+                        overall_success = False
+                        break
+                    time.sleep(1)
+                except Exception as e:
+                    st.error(f"💥 在执行 {step_name} 期间发生意外错误: {e}")
+                    status.update(label=f"流水线在 {step_name} 处崩溃", state="error")
+                    overall_success = False
+                    break
+            
+            if overall_success:
+                status.update(label="✅ 流水线成功完成！", state="complete")
+
+        if overall_success:
+            st.success("🎉 所有选定步骤均已成功完成！")
+            
+            if "步骤 6: 生成最终报告" in execution_plan:
+                report_path = config.FINAL_REPORT_OUTPUT_FILE
+                if os.path.exists(report_path):
+                    with open(report_path, 'r', encoding='utf-8') as f:
+                        html_content = f.read()
+
+                    st.subheader("📊 最终综合报告")
+                    st.components.v1.html(html_content, height=800, scrolling=True)
+
+                    st.download_button(
+                        label="📥 下载报告",
+                        data=html_content,
+                        file_name="final_comprehensive_report.html",
+                        mime="text/html",
+                    )
+                else:
+                    st.warning("未能找到最终报告文件，尽管该步骤已标记为成功。")

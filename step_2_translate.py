@@ -13,10 +13,10 @@
 import pandas as pd
 import json
 import re
-import sys
-sys.path.append('C:/Users/YYMF/PythonProjects/PI&Site/SITE_APP')
 import threading
+from google import genai
 from queue import Queue
+from google.genai import types
 from typing import List, Dict
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from tenacity import stop_after_attempt
@@ -59,31 +59,74 @@ def step_2_translate_unmatched(config: Config):
             return {"translations": []}
 
         try:
-            client = OpenAI(
-                base_url=config.OPENAI_BASE_URL,
-                api_key=config.OPENAI_API_KEY,
-                project=config.API_PROJECT,
-                organization=config.ORGANIZATION,
-                timeout=300.0
+            # 使用 genai 客户端
+            client = genai.Client(
+                api_key=config.GENAI_API_KEY,
+                http_options=types.HttpOptions(base_url=config.GENAI_BASE_URL)
             )
-            response = client.chat.completions.create(
-                messages=[
-                    {"role": "system", "content": BATCH_TRANSLATE_PROMPT},
-                    {"role": "user", "content": user_content_json}
-                ],
-                model=config.TRANSLATE_MODEL,
-                response_format={"type": "json_object"},
-                temperature=0.0
+
+            grounding_tool = types.Tool(google_search=types.GoogleSearch())
+            
+            config_genai = types.GenerateContentConfig(
+                # tools=[grounding_tool],
+                system_instruction=BATCH_TRANSLATE_PROMPT,
+                response_modalities=["TEXT"]
             )
-            content = response.choices[0].message.content
-            cleaned_content = re.sub(r'^```json\n|```$', '', content, flags=re.MULTILINE).strip()
+            
+            response = client.models.generate_content(
+                model=config.TRANSLATE_MODEL, # 使用配置中的翻译模型
+                contents=user_content_json,
+                config=config_genai
+            )
+            
+            if not response or not hasattr(response, 'text') or not response.text:
+                raise ValueError("Gemini 返回的响应为空")
+                
+            content = response.text.strip()
+            cleaned_content = re.sub(r'^```json\s*', '', content, flags=re.MULTILINE)
+            cleaned_content = re.sub(r'```\s*$', '', cleaned_content, flags=re.MULTILINE).strip()
             logger.info(f"收到响应: {cleaned_content[:200]}...")
-            return json.loads(cleaned_content)
+            
+            if not cleaned_content:
+                raise ValueError("清理后的响应内容为空")
+            
+            try:
+                return json.loads(cleaned_content)
+            except json.JSONDecodeError:
+                json_match = re.search(r'\{.*\}', cleaned_content, re.DOTALL)
+                if json_match:
+                    return json.loads(json_match.group())
+                raise ValueError(f"无法解析JSON内容: {cleaned_content[:200]}...")
         except Exception as e:
             logger.error(f"API 调用失败: {str(e)}")
             if "404" in str(e):
                 logger.error("API 返回 404 Not Found，可能的模型名称或端点错误")
             raise
+        #     client = OpenAI(
+        #         base_url=config.OPENAI_BASE_URL,
+        #         api_key=config.OPENAI_API_KEY,
+        #         project=config.API_PROJECT,
+        #         organization=config.ORGANIZATION,
+        #         timeout=300.0
+        #     )
+        #     response = client.chat.completions.create(
+        #         messages=[
+        #             {"role": "system", "content": BATCH_TRANSLATE_PROMPT},
+        #             {"role": "user", "content": user_content_json}
+        #         ],
+        #         model=config.TRANSLATE_MODEL,
+        #         response_format={"type": "json_object"},
+        #         temperature=0.0
+        #     )
+        #     content = response.choices[0].message.content
+        #     cleaned_content = re.sub(r'^```json\n|```$', '', content, flags=re.MULTILINE).strip()
+        #     logger.info(f"收到响应: {cleaned_content[:200]}...")
+        #     return json.loads(cleaned_content)
+        # except Exception as e:
+        #     logger.error(f"API 调用失败: {str(e)}")
+        #     if "404" in str(e):
+        #         logger.error("API 返回 404 Not Found，可能的模型名称或端点错误")
+        #     raise
 
     def translate_content_generator(batch: List[Dict]) -> str:
         tasks_for_llm = []

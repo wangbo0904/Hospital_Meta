@@ -22,8 +22,6 @@ from typing import List, Dict
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from tenacity import stop_after_attempt
 from tqdm import tqdm
-import sys
-sys.path.append('C:/Users/YYMF/PythonProjects/PI&Site/SITE_APP')
 from config_utils import Config, BATCH_AI_SELECT_PROMPT, shutdown_event, async_saver_local, get_tasks_to_process_generic, cleanup_jsonl_file, logger, sleep_and_retry, limits, retry, wait_exponential
 
 def step_4_ai_candidate_selection(config: Config):

@@ -1,8 +1,9 @@
-# config_utils.py
+# /SITE/config_utils.py
+
 import os
 import pandas as pd
 import json
-import re
+from pathlib import Path
 import threading
 from queue import Queue, Empty
 from typing import List, Dict, Tuple
@@ -17,53 +18,7 @@ logger = logging.getLogger(__name__)
 # 全局关闭事件
 shutdown_event = threading.Event()
 
-class Config:
-    # 文件路径
-    RAW_PARQUET_FILE = "./SITE_APP/data/test.parquet"
-    SITE_DICT_FILE = "./SITE_APP/data/site_dict_0911.parquet"
-    RESULTS_DIR = "./SITE_APP/results/"
-    OUTPUT_REPORT_DIR = "./SITE_APP/reports/"
-    MATCHED_EN_FILE = os.path.join(RESULTS_DIR, "step1_matched_en.parquet")
-    UNMATCHED_EN_FILE = os.path.join(RESULTS_DIR, "step1_unmatched_en.parquet")
-    TRANSLATED_JSONL_FILE = os.path.join(RESULTS_DIR, "step2_translated.jsonl")
-    META_MATCH_JSON_FILE = os.path.join(RESULTS_DIR, "step3_meta_match_results.json")
-    META_PARTIAL_EXACT_MATCHED_FILE = os.path.join(RESULTS_DIR, "step3_meta_partial_exact_matched.parquet")
-    AI_META_INPUT_FILE = os.path.join(RESULTS_DIR, "step3_ai_meta_input.parquet")
-    AI_META_OUTPUT_JSONL_FILE = os.path.join(RESULTS_DIR, "step4_ai_meta_output.jsonl")
-    ALL_MATCHES_COMBINED_FILE = os.path.join(RESULTS_DIR, "step4_all_matches_combined.parquet")
-    JUDGE_INPUT_FILE = os.path.join(RESULTS_DIR, "step4_judge_input.parquet")
-    FINAL_JUDGE_OUTPUT_JSONL_FILE = os.path.join(RESULTS_DIR, "step5_final_judge_output.json")
-    FINAL_JUDGE_OUTPUT_PARQUET_FILE = os.path.join(RESULTS_DIR, "step5_final_judge_output.parquet")
-    ARBITRATION_OUTPUT_JSONL_FILE = os.path.join(RESULTS_DIR, "step6_arbitration_output.jsonl")
-    ARBITRATION_OUTPUT_PARQUET_FILE = os.path.join(RESULTS_DIR, "step6_arbitration_output.parquet")
-    FINAL_REPORT_TEMPLATE_FILE = "./SITE_APP/final_report_template.html" # 假设模板在根目录
-    FINAL_REPORT_OUTPUT_FILE = os.path.join(OUTPUT_REPORT_DIR, "final_comprehensive_report.html")
-
-    # API and model settings
-    OPENAI_BASE_URL = "" 
-    OPENAI_API_KEY = ""
-    GENAI_BASE_URL = ""
-    GENAI_API_KEY = ""
-    API_PROJECT = ""
-    ORGANIZATION = ""
-    TRANSLATE_MODEL = ""
-    AI_SELECT_MODEL = ""
-    AI_JUDGE_MODEL = ""
-    ARBITRATE_MODEL = ""
-
-    # Performance and rate limiting
-    MAX_WORKERS = 30
-    CALLS_PER_MINUTE = 300
-    ONE_MINUTE = 60
-    RETRY_ATTEMPTS = 3
-    TRANSLATE_BATCH_SIZE = 100
-    AI_SELECT_BATCH_SIZE = 10
-    AI_JUDGE_BATCH_SIZE = 10
-    ARBITRATE_BATCH_SIZE = 10
-    CANDIDATE_LIMIT = 20
-
-
-# Prompts
+# --- 提示词 (全局加载，以便其他模块可以导入) ---
 BATCH_TRANSLATE_PROMPT = """
 **# Role**
 You are a top-tier medical information analysis expert and detective. Your core mission is to use rigorous web investigation to find the **most official and standardized full Chinese name** for each institution.
@@ -91,9 +46,6 @@ For each input, find the best possible Chinese name.
    - Evaluate the search results from authoritative sources.
    - **If you find Tier 1 or Tier 2 evidence** that directly links the `original_input` to a specific Chinese name, use that name.
    - **If evidence is weak or non-existent**, construct the most plausible name based on structure and pinyin, but remember to **append `(推测)`**.
-
-**# Output Format**
-(此部分保持不变)
 
 **# Example**
 
@@ -151,7 +103,6 @@ Your Expected Output:
 }
 ```
 """
-
 BATCH_AI_SELECT_PROMPT = """
 **# Role**
 You are a **Senior Medical Institution Specialist** for mainland China. Your expertise lies in identifying and verifying hospital names, understanding their official designations, common aliases, historical changes, and organizational structures. You are not a simple matcher; you are an expert providing an authoritative judgment based on verified evidence.
@@ -251,7 +202,6 @@ Each result object **must** contain the following ten keys:
 }
 ```
 """
-
 BATCH_JUDGE_PROMPT = """
 **# Role**
 You are a professional medical data governance assistant, specializing in determining if two medical institutions refer to the same entity through name analysis and web searches.
@@ -367,14 +317,95 @@ Your Expected Output:
 ```
 """
 
+class Config:
+    def __init__(self):
+        # --- 基础路径 (相对于脚本位置) ---
+        self.BASE_DIR = Path(__file__).resolve().parent
+        self.DATA_DIR = self.BASE_DIR / "data"
+        self.RESULTS_DIR = self.BASE_DIR / "results"
+        self.OUTPUT_REPORT_DIR = self.BASE_DIR / "reports"
+
+        # 确保目录存在
+        self.DATA_DIR.mkdir(exist_ok=True)
+        self.RESULTS_DIR.mkdir(exist_ok=True)
+        self.OUTPUT_REPORT_DIR.mkdir(exist_ok=True)
+        
+        # --- 文件路径 (占位符，将由应用动态更新) ---
+        self.RAW_PARQUET_FILE = self.DATA_DIR / "test.parquet"
+        self.SITE_DICT_FILE = self.DATA_DIR / "site_dict_0911.parquet"
+        
+        # --- 中间过程与输出文件 ---
+        self.MATCHED_EN_FILE = self.RESULTS_DIR / "step1_matched_en.parquet"
+        self.UNMATCHED_EN_FILE = self.RESULTS_DIR / "step1_unmatched_en.parquet"
+        self.TRANSLATED_JSONL_FILE = self.RESULTS_DIR / "step2_translated.jsonl"
+        self.META_MATCH_JSON_FILE = self.RESULTS_DIR / "step3_meta_match_results.json"
+        self.META_PARTIAL_EXACT_MATCHED_FILE = self.RESULTS_DIR / "step3_meta_partial_exact_matched.parquet"
+        self.AI_META_INPUT_FILE = self.RESULTS_DIR / "step3_ai_meta_input.parquet"
+        self.AI_META_OUTPUT_JSONL_FILE = self.RESULTS_DIR / "step4_ai_meta_output.jsonl"
+        self.ALL_MATCHES_COMBINED_FILE = self.RESULTS_DIR / "step4_all_matches_combined.parquet"
+        self.JUDGE_INPUT_FILE = self.RESULTS_DIR / "step4_judge_input.parquet"
+        self.FINAL_JUDGE_OUTPUT_JSONL_FILE = self.RESULTS_DIR / "step5_final_judge_output.json"
+        self.FINAL_JUDGE_OUTPUT_PARQUET_FILE = self.RESULTS_DIR / "step5_final_judge_output.parquet"
+        self.FINAL_REPORT_TEMPLATE_FILE = self.BASE_DIR / "final_report_template.html"
+        self.FINAL_REPORT_OUTPUT_FILE = self.OUTPUT_REPORT_DIR / "final_comprehensive_report.html"
+        self.FINAL_OUTPUT = self.RESULTS_DIR / "step6_final_output.parquet"
+        
+        # --- 来自您文件的API和模型设置 ---
+        self.OPENAI_BASE_URL = "http://116.63.133.80:30660/api/llm/v1"
+        self.OPENAI_API_KEY = "5YWs5YWx5pWw5o2u"
+        self.GENAI_BASE_URL = "https://globalai.vip/"
+        self.GENAI_API_KEY = "sk-pF9rUA3j4igwJbP0xQN2izR6jwQGY0ke4xXKBQnUdkHCZtF9"
+        self.API_PROJECT = "PI_SITE"
+        self.ORGANIZATION = " "
+        self.TRANSLATE_MODEL = "gemini-2.5-flash-lite-preview-06-17-thinking"
+        self.AI_SELECT_MODEL = "gemini-2.5-flash-lite-preview-06-17-thinking"
+        self.AI_JUDGE_MODEL = "gemini-2.5-flash-lite-preview-06-17-thinking"
+        self.ARBITRATE_MODEL = "global-gemini-2.5-flash"
+
+        # --- 来自您文件的性能和速率限制设置 ---
+        self.MAX_WORKERS = 30
+        self.CALLS_PER_MINUTE = 300
+        self.ONE_MINUTE = 60
+        self.RETRY_ATTEMPTS = 3
+        self.TRANSLATE_BATCH_SIZE = 100
+        self.AI_SELECT_BATCH_SIZE = 10
+        self.AI_JUDGE_BATCH_SIZE = 10
+        self.CANDIDATE_LIMIT = 20
+
+    def update_from_ui(self, ui_inputs: dict):
+        """从 Shiny UI 输入更新配置属性"""
+        logger.info("Updating configuration from UI...")
+        self.ORGANIZATION = ui_inputs.get("organization", self.ORGANIZATION)
+        self.TRANSLATE_MODEL = ui_inputs.get("translate_model", self.TRANSLATE_MODEL)
+        self.AI_SELECT_MODEL = ui_inputs.get("ai_select_model", self.AI_SELECT_MODEL)
+        self.AI_JUDGE_MODEL = ui_inputs.get("ai_judge_model", self.AI_JUDGE_MODEL)
+        
+        # 根据上传的文件名更新文件路径
+        if "raw_data_file" in ui_inputs:
+            self.RAW_PARQUET_FILE = self.DATA_DIR / ui_inputs["raw_data_file"]["name"]
+        if "dict_file" in ui_inputs:
+            self.SITE_DICT_FILE = self.DATA_DIR / ui_inputs["dict_file"]["name"]
+        
+        logger.info(f"Raw data file set to: {self.RAW_PARQUET_FILE}")
+        logger.info(f"Dictionary file set to: {self.SITE_DICT_FILE}")
+
+    def clear_results_dir(self):
+        """删除 results 目录中的所有文件，以确保一次干净的运行"""
+        logger.info(f"Clearing previous results from {self.RESULTS_DIR}...")
+        for file_path in self.RESULTS_DIR.glob('*'):
+            try:
+                if file_path.is_file():
+                    file_path.unlink()
+            except Exception as e:
+                logger.error(f"Error deleting file {file_path}: {e}")
+
+# --- 工具函数 (来自您的文件) ---
 def is_chinese(text: str) -> bool:
-    """Check if a string contains Chinese characters."""
-    if not isinstance(text, str):
-        return False
+    """检查字符串是否包含中文字符"""
+    if not isinstance(text, str): return False
     return any('\u4e00' <= char <= '\u9fff' for char in text)
 
 def async_saver_local(output_filepath: str, local_queue: Queue):
-    """Asynchronous saving function using a local queue."""
     with open(output_filepath, 'a', encoding='utf-8') as f:
         while True:
             try:
@@ -386,78 +417,47 @@ def async_saver_local(output_filepath: str, local_queue: Queue):
                 f.write(json_line + '\n')
                 f.flush()
                 local_queue.task_done()
-            except Empty: 
-                if shutdown_event.is_set():
-                    break
+            except Empty:
+                if shutdown_event.is_set(): break
                 continue
             except Exception as e:
-                logger.error(f"异步保存失败: {str(e)}")
+                logger.error(f"Async save failed: {str(e)}")
 
 def get_tasks_to_process_generic(input_df: pd.DataFrame, id_column: str, output_jsonl_path: str, output_id_column: str = None) -> Tuple[List[Dict], pd.DataFrame]:
-    """Calculate tasks to process, supporting checkpointing."""
-    if output_id_column is None:
-        output_id_column = id_column
-
-    logger.info("--- 开始数据核验与差异计算 ---")
-    
-    if id_column not in input_df.columns:
-        raise ValueError(f"错误: 输入DataFrame中未找到标识列 '{id_column}'。")
+    if output_id_column is None: output_id_column = id_column
+    if id_column not in input_df.columns: raise ValueError(f"Error: ID column '{id_column}' not found in input DataFrame.")
     
     input_df = input_df.drop_duplicates(subset=[id_column]).reset_index(drop=True)
     source_tasks_map = {row[id_column]: row.to_dict() for _, row in input_df.iterrows()}
     
-    logger.info(f"从源数据加载了 {len(source_tasks_map)} 个独立任务。")
-
     processed_task_ids = set()
     if os.path.exists(output_jsonl_path):
         with open(output_jsonl_path, 'r', encoding='utf-8') as f:
-            for line_num, line in enumerate(f, 1):
-                line = line.strip()
-                if not line:
-                    continue
+            for line in f:
+                if not line.strip(): continue
                 try:
                     data = json.loads(line)
                     if data.get('status') == 'success' and output_id_column in data:
                         processed_task_ids.add(data[output_id_column])
                 except json.JSONDecodeError:
-                    logger.warning(f"无效JSON在 {output_jsonl_path} 第 {line_num} 行: {line[:100]}...")
-        logger.info(f"从输出文件 '{os.path.basename(output_jsonl_path)}' 加载了 {len(processed_task_ids)} 条已处理记录。")
-    else:
-        logger.info(f"输出文件 '{os.path.basename(output_jsonl_path)}' 不存在，将处理所有任务。")
+                    continue
     
     tasks_to_run_ids = set(source_tasks_map.keys()) - processed_task_ids
     tasks_to_run = [source_tasks_map[task_id] for task_id in tasks_to_run_ids]
-    
-    logger.info(f"核验完成。总任务数: {len(source_tasks_map)}, 已处理: {len(processed_task_ids)}, 待处理: {len(tasks_to_run)}")
+    logger.info(f"Validation complete. Total: {len(source_tasks_map)}, Processed: {len(processed_task_ids)}, To-Do: {len(tasks_to_run)}")
     return tasks_to_run, input_df
 
 def cleanup_jsonl_file(filepath: str, id_column: str):
-    """Clean a JSONL file, keeping only the latest successful records."""
-    if not os.path.exists(filepath):
-        return
-
-    logger.info(f"--- 正在清理输出文件: {os.path.basename(filepath)} ---")
-    
+    if not os.path.exists(filepath): return
     all_records = []
     with open(filepath, 'r', encoding='utf-8') as f:
         for line in f:
-            try:
-                all_records.append(json.loads(line))
-            except json.JSONDecodeError:
-                continue
-
-    if not all_records:
-        return
-
+            try: all_records.append(json.loads(line))
+            except json.JSONDecodeError: continue
+    if not all_records: return
     df = pd.DataFrame(all_records)
-    if id_column not in df.columns:
-        logger.warning(f"找不到ID列 '{id_column}'，跳过清理。")
-        return
-
+    if id_column not in df.columns: return
     df_latest = df.drop_duplicates(subset=[id_column], keep='last')
     df_clean = df_latest[df_latest['status'] == 'success'].copy()
-
     with open(filepath, 'w', encoding='utf-8') as f:
         f.write(df_clean.to_json(orient='records', lines=True, force_ascii=False))
-    
-    logger.info(f"清理完成。文件包含 {len(df_clean)} 条成功记录。")
