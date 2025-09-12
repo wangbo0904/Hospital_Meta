@@ -9,5 +9,6 @@ sentence-transformers
 faiss-cpu
 openai
 google-generativeai 
+google-genai
 tenacity
 ratelimit
