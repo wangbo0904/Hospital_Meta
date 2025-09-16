@@ -1,17 +1,9 @@
-
-### Updated HTML Template
-The changes in the HTML template include:
-1. Adding a new column for `Confidence` in the table header.
-2. Adjusting the column widths to accommodate the new column.
-3. Adding a style for the confidence column to make it visually distinct.
-
-```html
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>端到端机构名称匹配综合报告</title>
+    <title>端到端机构名称匹配综合报告 - 存量数据版</title>
     <style>
         body { 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; 
@@ -31,6 +23,15 @@ The changes in the HTML template include:
             color: #0056b3; 
             border-bottom: 2px solid #dee2e6; 
             padding-bottom: 10px; 
+        }
+        .complete-badge {
+            background: linear-gradient(135deg, #2f9e44, #1c7ed6);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            margin-left: 15px;
+            display: inline-block;
         }
         .summary { 
             display: flex; 
@@ -61,7 +62,6 @@ The changes in the HTML template include:
             font-size: 2em; 
             font-weight: bold; 
         }
-        
         .cat-exact { border-color: #228be6; background-color: #e7f5ff; }
         .cat-exact .count { color: #1c7ed6; }
         .cat-judged-consistent { border-color: #2f9e44; background-color: #d3f9d8; }
@@ -70,68 +70,167 @@ The changes in the HTML template include:
         .cat-judged-inconsistent .count { color: #e67700; }
         .cat-unmatched { border-color: #868686; background-color: #e9ecef; }
         .cat-unmatched .count { color: #495057; }
-        
-        .controls { margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 15px; align-items: center; }
-        .controls input, .controls select { padding: 8px 12px; border: 1px solid #ced4da; border-radius: 4px; font-size: 1em; }
-        .controls input { flex-grow: 1; min-width: 250px; }
-        
-        table { width: 100%; border-collapse: collapse; font-size: 0.9em; table-layout: fixed; }
-        th, td { border: 1px solid #dee2e6; padding: 10px 12px; text-align: left; vertical-align: top; word-break: break-word; }
-        thead { background-color: #f1f3f5; position: sticky; top: 0; z-index: 10; }
-        th { font-weight: 600; }
-        
-        .reason-box { margin-top: 10px; border-left: 3px solid; padding: 8px 10px; font-size: 0.9em; border-radius: 3px; }
+        .cat-abnormal { border-color: #dc3545; background-color: #f8d7da; }
+        .cat-abnormal .count { color: #721c24; }
+        .controls { 
+            margin-bottom: 20px; 
+            display: flex; 
+            flex-wrap: wrap; 
+            gap: 15px; 
+            align-items: center; 
+        }
+        .controls input, .controls select { 
+            padding: 8px 12px; 
+            border: 1px solid #ced4da; 
+            border-radius: 4px; 
+            font-size: 1em; 
+        }
+        .controls input { 
+            flex-grow: 1; 
+            min-width: 250px; 
+        }
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            font-size: 0.9em; 
+            table-layout: fixed; 
+        }
+        th, td { 
+            border: 1px solid #dee2e6; 
+            padding: 10px 12px; 
+            text-align: left; 
+            vertical-align: top; 
+            word-break: break-word; 
+        }
+        thead { 
+            background-color: #f1f3f5; 
+            position: sticky; 
+            top: 0; 
+            z-index: 10; 
+        }
+        th { 
+            font-weight: 600; 
+        }
+        .reason-box { 
+            margin-top: 10px; 
+            border-left: 3px solid; 
+            padding: 8px 10px; 
+            font-size: 0.9em; 
+            border-radius: 3px; 
+        }
         .reason-step4 { border-color: #f59f00; background-color: #fff9db; }
         .reason-step5 { border-color: #4c6ef5; background-color: #edf2ff; }
-        
-        .input-block { padding: 5px; border-radius: 4px; background-color: #f8f9fa; }
-        .input-block strong { font-size: 0.9em; color: #495057; }
-
-        .affiliation-block { background-color: #e3f2fd; border-left: 3px solid #2196f3; }
-        .pi-site-block { background-color: #e8f5e8; border-left: 3px solid #4caf50; }
-        .confidence-block { background-color: #f0f4c3; border-left: 3px solid #c0ca33; text-align: center; }
-
-        .final-decision { font-weight: bold; padding: 5px 8px; border-radius: 4px; display: inline-block; margin-top: 8px; color: white; }
-        .exact, .judged-consistent { background-color: #2f9e44; }
-        .judged-inconsistent { background-color: #f59f00; }
-        .unmatched { background-color: #868686; }
+        .reason-abnormal { border-color: #dc3545; background-color: #f8d7da; }
+        .input-block { 
+            padding: 5px; 
+            border-radius: 4px; 
+            background-color: #f8f9fa; 
+        }
+        .input-block strong { 
+            font-size: 0.9em; 
+            color: #495057; 
+        }
+        .affiliation-block { 
+            background-color: #e3f2fd; 
+            border-left: 3px solid #2196f3; 
+        }
+        .trans-confidence-block { 
+            background-color: #e1bee7; 
+            border-left: 3px solid #ab47bc; 
+            text-align: center; 
+            font-weight: bold; 
+            padding: 5px; 
+            border-radius: 4px; 
+        }
+        .pi-site-block { 
+            background-color: #e8f5e8; 
+            border-left: 3px solid #4caf50; 
+        }
+        .confidence-block { 
+            background-color: #f0f4c3; 
+            border-left: 3px solid #c0ca33; 
+            text-align: center; 
+            font-weight: bold; 
+            padding: 5px; 
+            border-radius: 4px; 
+        }
+        .final-decision { 
+            font-weight: bold; 
+            padding: 5px 8px; 
+            border-radius: 4px; 
+            display: inline-block; 
+            margin-top: 8px; 
+            color: white; 
+        }
+        .exact, .judged-consistent { 
+            background-color: #2f9e44; 
+        }
+        .judged-inconsistent { 
+            background-color: #f59f00; 
+        }
+        .unmatched { 
+            background-color: #868686; 
+        }
+        .abnormal { 
+            background-color: #dc3545; 
+        }
+        .process-flow {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #1c7ed6;
+        }
+        .process-flow h3 {
+            margin-top: 0;
+            color: #1c7ed6;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>端到端机构名称匹配综合报告</h1>
-        <p><strong>数据来源:</strong> <code>step4_all_matches_combined.parquet, step5_final_judge_output.parquet</code></p>
-        <p><strong>报告生成时间:</strong> 2025-09-12 18:30:08</p>
+        <h1>端到端机构名称匹配综合报告 <span class="complete-badge">存量数据版</span></h1>
+        <div class="process-flow">
+            <h3>✅ 处理流程已完成</h3>
+            <p>Step 1-5 所有步骤均已执行，包含完整的AI判断结果及异常数据。</p>
+            <p><strong>数据来源:</strong> <code>step4_all_matches_combined.parquet, step0_abnormal_data.parquet, step5_final_judge_output.parquet</code></p>
+            <p><strong>报告生成时间:</strong> 2025-09-16 18:15:35</p>
+        </div>
         
         <h2>AI判断结果概览</h2>
         <div class="summary">
             
             <div class="summary-box cat-exact">
                 <h3>标签与匹配一致</h3>
-                <div class="count">13</div>
+                <div class="count">90</div>
             </div>
             
             <div class="summary-box cat-judged_consistent">
                 <h3>AI判断: 一致</h3>
-                <div class="count">3</div>
+                <div class="count">0</div>
             </div>
             
             <div class="summary-box cat-judged_inconsistent">
                 <h3>AI判断: 不一致（需人工核查）</h3>
-                <div class="count">14</div>
+                <div class="count">10</div>
             </div>
             
             <div class="summary-box cat-unmatched">
                 <h3>未匹配</h3>
-                <div class="count">12</div>
+                <div class="count">0</div>
+            </div>
+            
+            <div class="summary-box cat-abnormal">
+                <h3>异常数据</h3>
+                <div class="count">0</div>
             </div>
             
         </div>
 
-        <h2>详细审核追溯 (共 42 条)</h2>
+        <h2>详细审核追溯 (共 100 条)</h2>
         <div class="controls">
-            <select id="filter-select">
-                <option value="all">所有最终状态</option>
+            <select id="category-filter">
+                <option value="all" selected>所有最终状态</option>
                 
                 <option value="exact">标签与匹配一致</option>
                 
@@ -141,657 +240,1651 @@ The changes in the HTML template include:
                 
                 <option value="unmatched">未匹配</option>
                 
+                <option value="abnormal">异常数据</option>
+                
+            </select>
+            <select id="trans-confidence-filter">
+                <option value="all" selected>所有翻译置信度</option>
+                
+                <option value="all">all</option>
+                
+                <option value="High">High</option>
+                
+                <option value="Low">Low</option>
+                
+            </select>
+            <select id="confidence-filter">
+                <option value="all" selected>所有匹配置信度</option>
+                
+                <option value="all">all</option>
+                
+                <option value="High">High</option>
+                
+                <option value="exact_alias">exact_alias</option>
+                
+                <option value="exact_name">exact_name</option>
+                
+                <option value="name_en匹配">name_en匹配</option>
+                
+                <option value="partial">partial</option>
+                
             </select>
             <input type="text" id="search-input" placeholder="实时搜索表格内容...">
         </div>
         
         <div style="overflow-x:auto; max-height: 80vh;">
-            <table>
+            <table id="results-table">
                 <thead>
                     <tr>
                         <th style="width: 5%;">ID</th>
                         <th style="width: 25%;">原始输入</th>
-                        <th style="width: 35%;">匹配过程 & AI理由</th>
-                        <th style="width: 10%;">置信度</th>
-                        <th style="width: 25%;">最终判断结果</th>
+                        <th style="width: 10%;">翻译置信度</th>
+                        <th style="width: 30%;">匹配过程 & AI理由</th>
+                        <th style="width: 10%;">匹配置信度</th>
+                        <th style="width: 20%;">最终判断结果</th>
                     </tr>
                 </thead>
                 <tbody>
                     
-            <tr data-category="judged_inconsistent">
-                <td>32</td>
-                <td>
-                    <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Yongji People's Hospital</div></div>
-                    <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>永吉县人民医院</div></div>
-                </td>
-                <td>
-                    <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>运城市人民医院</div></div>
-                    <div class='reason-box reason-step4'><strong>Step 4 (AI选择理由):</strong> 输入名称“运城市永济市人民医院”与候选“运城市人民医院”地理位置均为运城市，名称高度相似。但搜索未发现明确的官方信息表明两者是同一机构。输入名称中的“永济市”可能指代一个独立的医院或区域。
-</div><div class='reason-box reason-step5'><strong>Step 5 (判断理由):</strong> ❌ 不一致 - Geographically and by name, these are different hospitals. '永吉县人民医院' would be located in Yongji County, while '运城市人民医院' is in Yuncheng City. The search results confirm '运城市人民医院' is a distinct entity in Yuncheng City and do not indicate any affiliation with Yongji County. [27, 28]</div>
-                </td>
-                <td><div class='confidence-block'>Low</div></td>
-                <td><b>最终名称:</b> <i style='color:grey;'>N/A</i><div class='final-decision judged_inconsistent'>AI判断: 不一致（需人工核查）</div></td>
-            </tr>
-            
+                <tr data-category="judged_inconsistent" data-confidence="High" data-trans-confidence="Low">
+                    <td>e4b126403bc24ac7c64c06c31177838f</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Department of infectious disease of China Gezhouba group central hospital</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>吉林大学中日联谊医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>Low</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>国药葛洲坝中心医院</div></div>
+                        <div class='reason-box reason-step4'><strong>Step 4 (AI选择理由):</strong> 输入'中国葛洲坝集团中心医院传染科'中的'中国葛洲坝集团中心医院'与候选'国药葛洲坝中心医院'的地理位置（宜昌市）一致。候选医院的别名中明确包含'葛洲坝集团中心医院'，因此认定为同一实体。存在直接的Tier 1证据，因此置信度评为'高'。</div><div class='reason-box reason-step5'><strong>Step 5 (判断理由):</strong> ❌ 不一致 - 两所医院名称差异大，根据搜索结果，'吉林大学中日联谊医院'是吉林大学的附属医院 [11]，而'国药葛洲坝中心医院'是另一家独立医院。 [19]</div>
+                    </td>
+                    <td><div class='confidence-block'>High</div></td>
+                    <td><b>最终名称:</b> <i style='color:grey;'>N/A</i><div class='final-decision judged_inconsistent'>AI判断: 不一致（需人工核查）</div></td>
+                </tr>
+                
 
-            <tr data-category="judged_inconsistent">
-                <td>33</td>
-                <td>
-                    <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Maternal and child health hospital of henan province The third affiliated hospital of zhengzhou university</div></div>
-                    <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>河南省儿童医院（郑州儿童医院）</div></div>
-                </td>
-                <td>
-                    <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>郑州大学第三附属医院</div></div>
-                    <div class='reason-box reason-step4'><strong>Step 4 (AI选择理由):</strong> 输入名称“河南省妇幼保健院郑州大学第三附属医院”与候选“郑州大学第三附属医院”名称高度一致，且“河南省妇幼保健院”是其别名。尽管输入省市为陕西西安，但根据医院名称和核心附属关系，确定为郑州大学第三附属医院。
-</div><div class='reason-box reason-step5'><strong>Step 5 (判断理由):</strong> ❌ 不一致 - While both are major children's hospitals in Zhengzhou, they are distinct entities. '河南省儿童医院（郑州儿童医院）' is a dedicated children's hospital, and '郑州大学第三附属医院' (also known as Henan Provincial Maternity and Child Health Hospital) is a tertiary hospital specializing in women's and children's health. They are not the same institution, although they might collaborate. [2, 3, 12, 14, 16]</div>
-                </td>
-                <td><div class='confidence-block'>High</div></td>
-                <td><b>最终名称:</b> <i style='color:grey;'>N/A</i><div class='final-decision judged_inconsistent'>AI判断: 不一致（需人工核查）</div></td>
-            </tr>
-            
+                <tr data-category="exact" data-confidence="High" data-trans-confidence="High">
+                    <td>39d22149ebbd3b77cc67ee95bd3663ad</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Center of Reproductive Medicine, Peking University Third Hospital</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>北京大学第三医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>High</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>北京大学第三医院</div></div>
+                        <div class='reason-box reason-step4'><strong>Step 4 (AI选择理由):</strong> 输入'北京大学第三医院生殖医学中心'中的'北京大学第三医院'与候选'北京大学第三医院'的中文名称和英文名称完全一致，且地理位置（北京市）匹配。这是一个精确匹配，因此置信度评为'高'。</div>
+                    </td>
+                    <td><div class='confidence-block'>High</div></td>
+                    <td><b>最终名称:</b> 北京大学第三医院<div class='final-decision exact'>标签与匹配一致</div></td>
+                </tr>
+                
 
-            <tr data-category="judged_inconsistent">
-                <td>34</td>
-                <td>
-                    <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>The Central Hospital Affiliated to Shandong First Medical University</div></div>
-                    <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>济南市中心医院</div></div>
-                </td>
-                <td>
-                    <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>山东第一医科大学第二附属医院</div></div>
-                    <div class='reason-box reason-step4'><strong>Step 4 (AI选择理由):</strong> 输入名称“山东第一医科大学附属中心医院”与候选“山东第一医科大学第二附属医院”和“泰安市中心医院”在地理位置（泰安市）和部分名称上相似。然而，搜索结果未能直接证实输入名称即为“山东第一医科大学第二附属医院”。“泰安市中心医院”也可能相关，但缺乏确凿的附属关系证据。
-</div><div class='reason-box reason-step5'><strong>Step 5 (判断理由):</strong> ❌ 不一致 - Although both are hospitals in Jinan, '济南市中心医院' is a distinct entity from '山东第一医科大学第二附属医院'. Search results indicate that '山东第一医科大学附属中心医院' is the same as '济南市中心医院', and the '第二附属医院' is a separate affiliated hospital of Shandong First Medical University. [15, 17, 20, 21]</div>
-                </td>
-                <td><div class='confidence-block'>Low</div></td>
-                <td><b>最终名称:</b> <i style='color:grey;'>N/A</i><div class='final-decision judged_inconsistent'>AI判断: 不一致（需人工核查）</div></td>
-            </tr>
-            
+                <tr data-category="exact" data-confidence="High" data-trans-confidence="High">
+                    <td>5b35b3a6ba70e4bf874271bd5d278c14</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Department of Infectious Disease of Wu Han Union Hospital</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>华中科技大学同济医学院附属协和医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>High</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>华中科技大学同济医学院附属协和医院</div></div>
+                        <div class='reason-box reason-step4'><strong>Step 4 (AI选择理由):</strong> 输入'武汉协和医院感染科'中的'武汉协和医院'与候选'华中科技大学同济医学院附属协和医院'的地理位置（武汉市）一致。候选医院的别名中明确包含'武汉协和医院'。存在直接的Tier 1证据，因此置信度评为'高'。</div>
+                    </td>
+                    <td><div class='confidence-block'>High</div></td>
+                    <td><b>最终名称:</b> 华中科技大学同济医学院附属协和医院<div class='final-decision exact'>标签与匹配一致</div></td>
+                </tr>
+                
 
-            <tr data-category="judged_inconsistent">
-                <td>38</td>
-                <td>
-                    <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Affiliated Zhuji Hospital ofWenzhou Medical University</div></div>
-                    <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>诸暨市人民医院</div></div>
-                </td>
-                <td>
-                    <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>江苏大学附属医院</div></div>
-                    <div class='reason-box reason-step4'><strong>Step 4 (AI选择理由):</strong> 输入名称“诸暨市温州医科大学附属医院”指向温州医科大学在诸暨市的附属医院。候选列表中的“江苏大学附属医院”位于江苏省镇江市，与输入信息地理位置和附属大学均不符。
-</div><div class='reason-box reason-step5'><strong>Step 5 (判断理由):</strong> ❌ 不一致 - These are geographically distinct hospitals. '诸暨市人民医院' is located in Zhuji City, Zhejiang Province, while '江苏大学附属医院' is affiliated with Jiangsu University, located in Jiangsu Province. There is no indication they are the same entity. [8]</div>
-                </td>
-                <td><div class='confidence-block'>No Match</div></td>
-                <td><b>最终名称:</b> <i style='color:grey;'>N/A</i><div class='final-decision judged_inconsistent'>AI判断: 不一致（需人工核查）</div></td>
-            </tr>
-            
+                <tr data-category="exact" data-confidence="High" data-trans-confidence="High">
+                    <td>9febbb8afb416fa3bc8e7d4c4032ca87</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Wuhan Union Hospital</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>华中科技大学同济医学院附属协和医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>High</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>华中科技大学同济医学院附属协和医院</div></div>
+                        <div class='reason-box reason-step4'><strong>Step 4 (AI选择理由):</strong> 输入'武汉协和医院'与候选'华中科技大学同济医学院附属协和医院'的地理位置（武汉市）一致。候选医院的别名中明确包含'武汉协和医院'。存在直接的Tier 1证据，因此置信度评为'高'。</div>
+                    </td>
+                    <td><div class='confidence-block'>High</div></td>
+                    <td><b>最终名称:</b> 华中科技大学同济医学院附属协和医院<div class='final-decision exact'>标签与匹配一致</div></td>
+                </tr>
+                
 
-            <tr data-category="exact">
-                <td>39</td>
-                <td>
-                    <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Chifeng Songshan Traditional Chinese Medicine & Mongolian Medicine Hospital</div></div>
-                    <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>赤峰市中医蒙医医院</div></div>
-                </td>
-                <td>
-                    <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>赤峰市中医蒙医医院</div></div>
-                    <div class='reason-box reason-step4'><strong>Step 4 (AI选择理由):</strong> 输入名称“内蒙古赤峰市松山区中医蒙医医院”与候选“赤峰市中医蒙医医院”在核心名称“赤峰市中医蒙医医院”上一致，且地理位置均为内蒙古赤峰市。虽然输入包含“松山区”，但搜索结果显示“赤峰市中医蒙医医院”是正确的名称。
-</div><div class='reason-box reason-step5'><strong>Step 5 (判断理由):</strong> ❌ 不一致 - nan</div>
-                </td>
-                <td><div class='confidence-block'>High</div></td>
-                <td><b>最终名称:</b> 赤峰市中医蒙医医院<div class='final-decision exact'>标签与匹配一致</div></td>
-            </tr>
-            
+                <tr data-category="exact" data-confidence="High" data-trans-confidence="High">
+                    <td>09a7aea50fc3bb3dcb20a91c560e6e8b</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Tongji Hospital</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>华中科技大学同济医学院附属同济医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>High</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>华中科技大学同济医学院附属同济医院</div></div>
+                        <div class='reason-box reason-step4'><strong>Step 4 (AI选择理由):</strong> 输入'同济医院'与候选'华中科技大学同济医学院附属同济医院'的地理位置（武汉市）一致。候选医院的别名中明确包含'武汉同济医院'。存在直接的Tier 1证据，因此置信度评为'高'。</div>
+                    </td>
+                    <td><div class='confidence-block'>High</div></td>
+                    <td><b>最终名称:</b> 华中科技大学同济医学院附属同济医院<div class='final-decision exact'>标签与匹配一致</div></td>
+                </tr>
+                
 
-            <tr data-category="unmatched">
-                <td>10</td>
-                <td>
-                    <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Chongqing Medical University Affiliated Fuling Hospital</div></div>
-                    <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>重庆大学附属涪陵医院</div></div>
-                </td>
-                <td>
-                    <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>None</div></div>
-                    <div class='reason-box reason-step4'><strong>Step 4 (AI选择理由):</strong> 未能找到与“重庆医科大学附属涪陵医院”匹配的医院。在提供的候选医院中，没有直接或间接的关联信息。</div><div class='reason-box reason-step5'><strong>Step 5 (判断理由):</strong> ❌ 不一致 - nan</div>
-                </td>
-                <td><div class='confidence-block'>No Match</div></td>
-                <td><b>最终名称:</b> <i style='color:grey;'>N/A</i><div class='final-decision unmatched'>未匹配</div></td>
-            </tr>
-            
+                <tr data-category="exact" data-confidence="High" data-trans-confidence="High">
+                    <td>3b13ce4b4a14143ab2d3d3c4f33c796e</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>The First Affilated Hospital of Guangzhou Medical College</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>广州医科大学附属第一医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>High</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>广州医科大学附属第一医院</div></div>
+                        <div class='reason-box reason-step4'><strong>Step 4 (AI选择理由):</strong> 输入'广州医学院第一附属医院'与候选'广州医科大学附属第一医院'的地理位置（广州市）一致。经网络搜索，广州医学院已更名为广州医科大学，且候选医院的别名中包含'广州医学院第一附属医院'。存在直接的Tier 1证据，因此置信度评为'高'。</div>
+                    </td>
+                    <td><div class='confidence-block'>High</div></td>
+                    <td><b>最终名称:</b> 广州医科大学附属第一医院<div class='final-decision exact'>标签与匹配一致</div></td>
+                </tr>
+                
 
-            <tr data-category="unmatched">
-                <td>11</td>
-                <td>
-                    <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Youxian people's Hospital</div></div>
-                    <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>福建省尤溪县总医院</div></div>
-                </td>
-                <td>
-                    <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>None</div></div>
-                    <div class='reason-box reason-step4'><strong>Step 4 (AI选择理由):</strong> 未能找到与“湖南省攸县人民医院”匹配的医院。候选医院名称相似度不足，且地理位置不符。</div><div class='reason-box reason-step5'><strong>Step 5 (判断理由):</strong> ❌ 不一致 - nan</div>
-                </td>
-                <td><div class='confidence-block'>No Match</div></td>
-                <td><b>最终名称:</b> <i style='color:grey;'>N/A</i><div class='final-decision unmatched'>未匹配</div></td>
-            </tr>
-            
+                <tr data-category="exact" data-confidence="High" data-trans-confidence="High">
+                    <td>010e3b93c0b9c4565c0d373a3ad27a92</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Tongji Hospital of HUST</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>华中科技大学同济医学院附属同济医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>High</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>华中科技大学同济医学院附属同济医院</div></div>
+                        <div class='reason-box reason-step4'><strong>Step 4 (AI选择理由):</strong> 输入'华中科技大学同济医院'与候选'华中科技大学同济医学院附属同济医院'在中文名称和英文名称上高度相似，且地理位置（武汉市）一致。通过查询华中科技大学同济医院官网，其正式名称为“华中科技大学同济医学院附属同济医院”。存在直接的Tier 1证据，因此置信度评为'高'。</div>
+                    </td>
+                    <td><div class='confidence-block'>High</div></td>
+                    <td><b>最终名称:</b> 华中科技大学同济医学院附属同济医院<div class='final-decision exact'>标签与匹配一致</div></td>
+                </tr>
+                
 
-            <tr data-category="judged_inconsistent">
-                <td>12</td>
-                <td>
-                    <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Qitaihe Infectious Disease Hospital</div></div>
-                    <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>七台河七煤医院</div></div>
-                </td>
-                <td>
-                    <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>七台河市人民医院</div></div>
-                    <div class='reason-box reason-step4'><strong>Step 4 (AI选择理由):</strong> 候选医院“七台河市人民医院”与输入地“黑龙江省七台河市”地理位置一致。但输入名称为“传染病医院”，而候选名称为“人民医院”，且无官方信息表明两者为同一实体。因此，置信度为“低”。</div><div class='reason-box reason-step5'><strong>Step 5 (判断理由):</strong> ❌ 不一致 - 虽然都在七台河市，但“七煤医院”通常指代煤炭系统医院，而“市人民医院”是综合性医院，搜索结果显示两者是不同的医院，但服务于同一地区。</div>
-                </td>
-                <td><div class='confidence-block'>Low</div></td>
-                <td><b>最终名称:</b> <i style='color:grey;'>N/A</i><div class='final-decision judged_inconsistent'>AI判断: 不一致（需人工核查）</div></td>
-            </tr>
-            
+                <tr data-category="exact" data-confidence="High" data-trans-confidence="Low">
+                    <td>4a048fb1a0a711af00f1c9b6b326c853</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Fuzhou Infectious Disease Hospital</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>福建医科大学孟超肝胆医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>Low</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>福建医科大学孟超肝胆医院</div></div>
+                        <div class='reason-box reason-step4'><strong>Step 4 (AI选择理由):</strong> 输入'福州传染病院'与候选'福建医科大学孟超肝胆医院'的地理位置（福州市）一致。经网络搜索，福建医科大学孟超肝胆医院（原福建省传染病院）在官方信息中明确提及'福州传染病院'是其曾用名或别名。存在直接的Tier 1证据，因此置信度评为'高'。</div>
+                    </td>
+                    <td><div class='confidence-block'>High</div></td>
+                    <td><b>最终名称:</b> 福建医科大学孟超肝胆医院<div class='final-decision exact'>标签与匹配一致</div></td>
+                </tr>
+                
 
-            <tr data-category="unmatched">
-                <td>13</td>
-                <td>
-                    <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Sun Yat-sen University Cancer Center Gansu Hospital</div></div>
-                    <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>中山大学孙逸仙纪念医院</div></div>
-                </td>
-                <td>
-                    <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>None</div></div>
-                    <div class='reason-box reason-step4'><strong>Step 4 (AI选择理由):</strong> 输入的“甘肃省兰州市中山大学孙逸仙纪念医院癌症中心(推测)”信息不明确，且提供的候选医院中，“中山大学孙逸仙纪念医院”位于广东广州，“兰州市第一人民医院”、“兰州大学第一医院”、“甘肃省中医院”、“甘肃省肿瘤医院”和“甘肃省人民医院”、“甘肃省妇幼保健院”、“兰州市中医医院”均与输入名称不符，也无明确的癌症中心关联。因此，无法匹配。</div><div class='reason-box reason-step5'><strong>Step 5 (判断理由):</strong> ❌ 不一致 - nan</div>
-                </td>
-                <td><div class='confidence-block'>No Match</div></td>
-                <td><b>最终名称:</b> <i style='color:grey;'>N/A</i><div class='final-decision unmatched'>未匹配</div></td>
-            </tr>
-            
+                <tr data-category="exact" data-confidence="High" data-trans-confidence="High">
+                    <td>ccd56d74aaf7fe7569eea6a16fe542c3</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Wuhan Union Hospital</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>华中科技大学同济医学院附属协和医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>High</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>华中科技大学同济医学院附属协和医院</div></div>
+                        <div class='reason-box reason-step4'><strong>Step 4 (AI选择理由):</strong> 输入机构名称“武汉协和医院”与候选“华中科技大学同济医学院附属协和医院”高度匹配且地理位置一致。根据维基百科和医院官网信息，武汉协和医院是华中科技大学同济医学院附属协和医院的别名和常用名称，且其英文名“Wuhan Union Hospital”也与输入英文名“Wuhan Union Hospital”完全一致。存在直接的Tier 1和Tier 2证据，因此置信度评为'高'。 [2, 3, 4, 7, 8, 10, 12, 13]</div>
+                    </td>
+                    <td><div class='confidence-block'>High</div></td>
+                    <td><b>最终名称:</b> 华中科技大学同济医学院附属协和医院<div class='final-decision exact'>标签与匹配一致</div></td>
+                </tr>
+                
 
-            <tr data-category="exact">
-                <td>15</td>
-                <td>
-                    <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>The Third People’s Hospital of Yunfu (Luoding)</div></div>
-                    <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>云浮市（罗定）第三人民医院</div></div>
-                </td>
-                <td>
-                    <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>云浮市（罗定）第三人民医院</div></div>
-                    <div class='reason-box reason-step4'><strong>Step 4 (AI选择理由):</strong> 候选医院“云浮市（罗定）第三人民医院”与输入地“云浮市”和名称“第三人民医院(罗定)”高度一致。名称中的（罗定）表明其与罗定地区相关，与输入信息吻合。因此，置信度为“高”。</div><div class='reason-box reason-step5'><strong>Step 5 (判断理由):</strong> ❌ 不一致 - nan</div>
-                </td>
-                <td><div class='confidence-block'>High</div></td>
-                <td><b>最终名称:</b> 云浮市（罗定）第三人民医院<div class='final-decision exact'>标签与匹配一致</div></td>
-            </tr>
-            
+                <tr data-category="exact" data-confidence="name_en匹配" data-trans-confidence="N/A">
+                    <td>dbab5e1c2b4bd10c5dc5478ef2024da6</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>The Second Affiliated Hospital of Dalian Medical University</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>大连医科大学附属第二医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>N/A</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>大连医科大学附属第二医院</div></div>
+                        
+                    </td>
+                    <td><div class='confidence-block'>name_en匹配</div></td>
+                    <td><b>最终名称:</b> 大连医科大学附属第二医院<div class='final-decision exact'>标签与匹配一致</div></td>
+                </tr>
+                
 
-            <tr data-category="judged_consistent">
-                <td>16</td>
-                <td>
-                    <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Foresea Life Insurance Nanning Hospital</div></div>
-                    <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>前海人寿广西医院</div></div>
-                </td>
-                <td>
-                    <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>前海人寿南宁医院</div></div>
-                    <div class='reason-box reason-step4'><strong>Step 4 (AI选择理由):</strong> 候选医院“前海人寿南宁医院”的名称和地点与输入信息“南宁市前海人寿医院”完全一致。因此，置信度为“高”。</div><div class='reason-box reason-step5'><strong>Step 5 (判断理由):</strong> ✅ 一致 - 根据搜索结果，前海人寿在广西，尤其在南宁设有医院。'前海人寿广西医院'和'前海人寿南宁医院'很可能是同一家医院的不同表述或分支，且都与'前海人寿'相关联，并都位于南宁地区。搜索结果显示它们共建有康养社区，且信息相互印证。 [2, 10, 21, 26, 33]</div>
-                </td>
-                <td><div class='confidence-block'>High</div></td>
-                <td><b>最终名称:</b> 前海人寿南宁医院<div class='final-decision judged_consistent'>AI判断: 一致</div></td>
-            </tr>
-            
+                <tr data-category="exact" data-confidence="name_en匹配" data-trans-confidence="N/A">
+                    <td>db1ac9266931e693436f68f96fbc2849</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Henan Provincial People's Hospital</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>河南省人民医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>N/A</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>河南省人民医院</div></div>
+                        
+                    </td>
+                    <td><div class='confidence-block'>name_en匹配</div></td>
+                    <td><b>最终名称:</b> 河南省人民医院<div class='final-decision exact'>标签与匹配一致</div></td>
+                </tr>
+                
 
-            <tr data-category="unmatched">
-                <td>17</td>
-                <td>
-                    <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Beijing GoBroad Hospital, Beijing, Beijing 102200</div></div>
-                    <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>北京高博医院</div></div>
-                </td>
-                <td>
-                    <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>None</div></div>
-                    <div class='reason-box reason-step4'><strong>Step 4 (AI选择理由):</strong> 输入的“北京国广医院”信息不明确，且候选医院中没有名称完全或高度相似的医院。虽然有“北京国医堂中医医院”，但名称和性质不符，无法匹配。</div><div class='reason-box reason-step5'><strong>Step 5 (判断理由):</strong> ❌ 不一致 - nan</div>
-                </td>
-                <td><div class='confidence-block'>No Match</div></td>
-                <td><b>最终名称:</b> <i style='color:grey;'>N/A</i><div class='final-decision unmatched'>未匹配</div></td>
-            </tr>
-            
+                <tr data-category="judged_inconsistent" data-confidence="name_en匹配" data-trans-confidence="N/A">
+                    <td>ea575dde540c365a2bbc6179f02c3fe7</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>The first Affiliated Hospital of Anhui Medical University</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>江苏省人民医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>N/A</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>安徽医科大学第一附属医院</div></div>
+                        <div class='reason-box reason-step5'><strong>Step 5 (判断理由):</strong> ❌ 不一致 - 两所医院名称差异大，分别位于不同省份（江苏和安徽），不属于同一实体。 [4, 14, 15, 17, 18]</div>
+                    </td>
+                    <td><div class='confidence-block'>name_en匹配</div></td>
+                    <td><b>最终名称:</b> <i style='color:grey;'>N/A</i><div class='final-decision judged_inconsistent'>AI判断: 不一致（需人工核查）</div></td>
+                </tr>
+                
 
-            <tr data-category="unmatched">
-                <td>18</td>
-                <td>
-                    <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Beijing Gobroad Brond Hospital</div></div>
-                    <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>北京高博博仁医院</div></div>
-                </td>
-                <td>
-                    <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>None</div></div>
-                    <div class='reason-box reason-step4'><strong>Step 4 (AI选择理由):</strong> 输入的“北京国广博伦医院”信息不明确。候选医院中，“北京高博博仁医院”和“北京高博医院”名称相似，但与输入信息“国广博伦”存在较大差异，无法确认。其他北京的医院名称也均不匹配。因此，置信度为“无匹配”。</div><div class='reason-box reason-step5'><strong>Step 5 (判断理由):</strong> ❌ 不一致 - nan</div>
-                </td>
-                <td><div class='confidence-block'>No Match</div></td>
-                <td><b>最终名称:</b> <i style='color:grey;'>N/A</i><div class='final-decision unmatched'>未匹配</div></td>
-            </tr>
-            
+                <tr data-category="judged_inconsistent" data-confidence="name_en匹配" data-trans-confidence="N/A">
+                    <td>e081a66e6d8460f7db991f669ee06847</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>The First Affiliated Hospital of Anhui Medical University</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>江苏省人民医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>N/A</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>安徽医科大学第一附属医院</div></div>
+                        <div class='reason-box reason-step5'><strong>Step 5 (判断理由):</strong> ❌ 不一致 - 两所医院名称差异大，分别位于不同省份（江苏和安徽），不属于同一实体。 [4, 14, 15, 17, 18]</div>
+                    </td>
+                    <td><div class='confidence-block'>name_en匹配</div></td>
+                    <td><b>最终名称:</b> <i style='color:grey;'>N/A</i><div class='final-decision judged_inconsistent'>AI判断: 不一致（需人工核查）</div></td>
+                </tr>
+                
 
-            <tr data-category="exact">
-                <td>19</td>
-                <td>
-                    <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Wuhan Union Jinyin Lake Hospital</div></div>
-                    <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>华中科技大学同济医学院附属协和医院（金银湖院区）</div></div>
-                </td>
-                <td>
-                    <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>华中科技大学同济医学院附属协和医院（金银湖院区）</div></div>
-                    <div class='reason-box reason-step4'><strong>Step 4 (AI选择理由):</strong> 候选医院“华中科技大学同济医学院附属协和医院（金银湖院区）”与输入信息“武汉协和医院金银湖院区”在名称和院区上完全一致。因此，置信度为“高”。</div><div class='reason-box reason-step5'><strong>Step 5 (判断理由):</strong> ❌ 不一致 - nan</div>
-                </td>
-                <td><div class='confidence-block'>High</div></td>
-                <td><b>最终名称:</b> 华中科技大学同济医学院附属协和医院（金银湖院区）<div class='final-decision exact'>标签与匹配一致</div></td>
-            </tr>
-            
+                <tr data-category="exact" data-confidence="name_en匹配" data-trans-confidence="N/A">
+                    <td>cf962c5cf6f5908ea17e6f2e75cb0204</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Cangzhou Central Hospital</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>沧州市中心医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>N/A</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>沧州市中心医院</div></div>
+                        
+                    </td>
+                    <td><div class='confidence-block'>name_en匹配</div></td>
+                    <td><b>最终名称:</b> 沧州市中心医院<div class='final-decision exact'>标签与匹配一致</div></td>
+                </tr>
+                
 
-            <tr data-category="judged_consistent">
-                <td>20</td>
-                <td>
-                    <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Wuhan Union West Hospital</div></div>
-                    <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>华中科技大学同济医院附属协和医院</div></div>
-                </td>
-                <td>
-                    <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>华中科技大学同济医学院附属协和医院（车谷院区）</div></div>
-                    <div class='reason-box reason-step4'><strong>Step 4 (AI选择理由):</strong> 候选医院“华中科技大学同济医学院附属协和医院（车谷院区）”与输入信息“武汉协和医院西院”在名称和地理位置（西院/车谷院区）上高度一致。经过搜索确认，车谷院区即为协和医院的西院区。因此，置信度为“高”。</div><div class='reason-box reason-step5'><strong>Step 5 (判断理由):</strong> ✅ 一致 - 名称高度相似，'车谷院区'表明是'华中科技大学同济医学院附属协和医院'的一个分院。 [12, 15, 23, 29, 34]</div>
-                </td>
-                <td><div class='confidence-block'>High</div></td>
-                <td><b>最终名称:</b> 华中科技大学同济医学院附属协和医院（车谷院区）<div class='final-decision judged_consistent'>AI判断: 一致</div></td>
-            </tr>
-            
+                <tr data-category="judged_inconsistent" data-confidence="name_en匹配" data-trans-confidence="N/A">
+                    <td>64cbdae973c70ae0fefe7476cee5fc72</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Affiliated Hospital of Hebei University</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>广东医科大学附属医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>N/A</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>河北大学附属医院</div></div>
+                        <div class='reason-box reason-step5'><strong>Step 5 (判断理由):</strong> ❌ 不一致 - 两所医院名称差异大，分别位于不同省份（广东和河北），不属于同一实体。 [2, 20, 21]</div>
+                    </td>
+                    <td><div class='confidence-block'>name_en匹配</div></td>
+                    <td><b>最终名称:</b> <i style='color:grey;'>N/A</i><div class='final-decision judged_inconsistent'>AI判断: 不一致（需人工核查）</div></td>
+                </tr>
+                
 
-            <tr data-category="unmatched">
-                <td>21</td>
-                <td>
-                    <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Southeast University Affiliated Liangjiang Hospital (Pukou People's Hospital)</div></div>
-                    <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>南京市浦口人民医院</div></div>
-                </td>
-                <td>
-                    <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>None</div></div>
-                    <div class='reason-box reason-step4'><strong>Step 4 (AI选择理由):</strong> 未找到直接或间接匹配的医院。</div><div class='reason-box reason-step5'><strong>Step 5 (判断理由):</strong> ❌ 不一致 - nan</div>
-                </td>
-                <td><div class='confidence-block'>No Match</div></td>
-                <td><b>最终名称:</b> <i style='color:grey;'>N/A</i><div class='final-decision unmatched'>未匹配</div></td>
-            </tr>
-            
+                <tr data-category="exact" data-confidence="name_en匹配" data-trans-confidence="N/A">
+                    <td>8c16661a59dd1a65ce7ed21bd741b847</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>The First Affiliated Hospital of Guangzhou Medical University</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>广州医科大学附属第一医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>N/A</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>广州医科大学附属第一医院</div></div>
+                        
+                    </td>
+                    <td><div class='confidence-block'>name_en匹配</div></td>
+                    <td><b>最终名称:</b> 广州医科大学附属第一医院<div class='final-decision exact'>标签与匹配一致</div></td>
+                </tr>
+                
 
-            <tr data-category="exact">
-                <td>22</td>
-                <td>
-                    <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Shunde Hospital,Southern Medical University(The First People's Hospital of Shunde, Foshan)</div></div>
-                    <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>南方医科大学第八附属医院（佛山市顺德区第一人民医院）</div></div>
-                </td>
-                <td>
-                    <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>南方医科大学第八附属医院（佛山市顺德区第一人民医院）</div></div>
-                    <div class='reason-box reason-step4'><strong>Step 4 (AI选择理由):</strong> 输入名称“佛山市顺德第一人民医院”与候选医院“南方医科大学第八附属医院（佛山市顺德区第一人民医院）”的中文名称完全匹配，且英文名称也表明了关联性。</div><div class='reason-box reason-step5'><strong>Step 5 (判断理由):</strong> ❌ 不一致 - nan</div>
-                </td>
-                <td><div class='confidence-block'>High</div></td>
-                <td><b>最终名称:</b> 南方医科大学第八附属医院（佛山市顺德区第一人民医院）<div class='final-decision exact'>标签与匹配一致</div></td>
-            </tr>
-            
+                <tr data-category="exact" data-confidence="name_en匹配" data-trans-confidence="N/A">
+                    <td>8da2831c9a4be9cf829ac4471fa2041d</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Henan provincial people's hospital</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>河南省人民医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>N/A</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>河南省人民医院</div></div>
+                        
+                    </td>
+                    <td><div class='confidence-block'>name_en匹配</div></td>
+                    <td><b>最终名称:</b> 河南省人民医院<div class='final-decision exact'>标签与匹配一致</div></td>
+                </tr>
+                
 
-            <tr data-category="judged_consistent">
-                <td>24</td>
-                <td>
-                    <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Chengdu Huamei Medical Cosmetology Hospital</div></div>
-                    <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>四川华美整形美容医院</div></div>
-                </td>
-                <td>
-                    <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>四川华美紫馨医学美容医院</div></div>
-                    <div class='reason-box reason-step4'><strong>Step 4 (AI选择理由):</strong> 候选医院“四川华美紫馨医学美容医院”与输入名称“成都华美医疗美容医院”在“华美”和“医疗美容医院”方面高度相似，且地理位置同为四川成都。但缺乏直接证据确认两者为同一实体，因此置信度为“低”。</div><div class='reason-box reason-step5'><strong>Step 5 (判断理由):</strong> ✅ 一致 - 根据搜索结果，“四川华美紫馨医学美容医院”是“四川华美整形美容医院”的完整名称，两者都指向同一家医院，且都位于四川成都。 [3, 4, 7, 9, 11]</div>
-                </td>
-                <td><div class='confidence-block'>Low</div></td>
-                <td><b>最终名称:</b> 四川华美紫馨医学美容医院<div class='final-decision judged_consistent'>AI判断: 一致</div></td>
-            </tr>
-            
+                <tr data-category="exact" data-confidence="name_en匹配" data-trans-confidence="N/A">
+                    <td>a5c4873fe02d9356d6c47a4eb76426b6</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>The First Affiliated Hospital of Guangzhou Medical University</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>广州医科大学附属第一医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>N/A</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>广州医科大学附属第一医院</div></div>
+                        
+                    </td>
+                    <td><div class='confidence-block'>name_en匹配</div></td>
+                    <td><b>最终名称:</b> 广州医科大学附属第一医院<div class='final-decision exact'>标签与匹配一致</div></td>
+                </tr>
+                
 
-            <tr data-category="judged_inconsistent">
-                <td>25</td>
-                <td>
-                    <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Tianjin Huahu Hospital</div></div>
-                    <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>天津市环湖医院</div></div>
-                </td>
-                <td>
-                    <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>天津市华苑医院</div></div>
-                    <div class='reason-box reason-step4'><strong>Step 4 (AI选择理由):</strong> 候选医院“天津市华苑医院”与输入名称“天津市华都医院”在发音和拼写上（Huadu vs Huayuan）有相似之处，且同在天津市。但缺乏直接证据确认两者为同一实体，因此置信度为“低”。</div><div class='reason-box reason-step5'><strong>Step 5 (判断理由):</strong> ❌ 不一致 - 名称不同，且搜索结果指向的是两家不同的医院。</div>
-                </td>
-                <td><div class='confidence-block'>Low</div></td>
-                <td><b>最终名称:</b> <i style='color:grey;'>N/A</i><div class='final-decision judged_inconsistent'>AI判断: 不一致（需人工核查）</div></td>
-            </tr>
-            
+                <tr data-category="exact" data-confidence="name_en匹配" data-trans-confidence="N/A">
+                    <td>903f51b6c89ef5e66b9eb2844e777c6b</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>The First Affiliated Hospital of Guangzhou Medical University</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>广州医科大学附属第一医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>N/A</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>广州医科大学附属第一医院</div></div>
+                        
+                    </td>
+                    <td><div class='confidence-block'>name_en匹配</div></td>
+                    <td><b>最终名称:</b> 广州医科大学附属第一医院<div class='final-decision exact'>标签与匹配一致</div></td>
+                </tr>
+                
 
-            <tr data-category="exact">
-                <td>26</td>
-                <td>
-                    <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Taicang TCM Hospital Affiliated to Nanjing University of Chinese Medicine</div></div>
-                    <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>太仓市中医医院</div></div>
-                </td>
-                <td>
-                    <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>太仓市中医医院</div></div>
-                    <div class='reason-box reason-step4'><strong>Step 4 (AI选择理由):</strong> 候选医院“太仓市中医医院”与输入名称“太仓中医院”在地理位置（太仓）和医院类型（中医医院）上高度一致。尽管输入提到“南京大学”，但“苏州大学附属太仓中医院”的别名可能指向同一实体。搜索结果确认“太仓市中医医院”是当地正规医疗机构，与输入信息相符，因此置信度为“高”。</div><div class='reason-box reason-step5'><strong>Step 5 (判断理由):</strong> ❌ 不一致 - nan</div>
-                </td>
-                <td><div class='confidence-block'>High</div></td>
-                <td><b>最终名称:</b> 太仓市中医医院<div class='final-decision exact'>标签与匹配一致</div></td>
-            </tr>
-            
+                <tr data-category="exact" data-confidence="name_en匹配" data-trans-confidence="N/A">
+                    <td>4fa83d6c3d89fb568d0118f8a630b877</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>the First Affiliated Hospital of Guangzhou Medical University</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>广州医科大学附属第一医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>N/A</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>广州医科大学附属第一医院</div></div>
+                        
+                    </td>
+                    <td><div class='confidence-block'>name_en匹配</div></td>
+                    <td><b>最终名称:</b> 广州医科大学附属第一医院<div class='final-decision exact'>标签与匹配一致</div></td>
+                </tr>
+                
 
-            <tr data-category="judged_inconsistent">
-                <td>27</td>
-                <td>
-                    <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Qianhu Hospital</div></div>
-                    <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>宁波市鄞州区钱湖医院</div></div>
-                </td>
-                <td>
-                    <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>宁波大学医学院附属医院</div></div>
-                    <div class='reason-box reason-step4'><strong>Step 4 (AI选择理由):</strong> 输入名称“前湖医院”与候选医院“宁波大学医学院附属医院”的城市（宁波）一致，且“前湖”可能是医院的地理位置特征。然而，名称本身并无直接关联，缺乏进一步证据确认两者是同一实体，因此置信度为“低”。</div><div class='reason-box reason-step5'><strong>Step 5 (判断理由):</strong> ❌ 不一致 - 名称和所属机构均不相同。</div>
-                </td>
-                <td><div class='confidence-block'>Low</div></td>
-                <td><b>最终名称:</b> <i style='color:grey;'>N/A</i><div class='final-decision judged_inconsistent'>AI判断: 不一致（需人工核查）</div></td>
-            </tr>
-            
+                <tr data-category="exact" data-confidence="name_en匹配" data-trans-confidence="N/A">
+                    <td>fcfee4e47b9f12d5dcfb6e3d6fa80296</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>The Second Affiliated Hospital of Anhui Medical University</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>安徽医科大学第二附属医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>N/A</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>安徽医科大学第二附属医院</div></div>
+                        
+                    </td>
+                    <td><div class='confidence-block'>name_en匹配</div></td>
+                    <td><b>最终名称:</b> 安徽医科大学第二附属医院<div class='final-decision exact'>标签与匹配一致</div></td>
+                </tr>
+                
 
-            <tr data-category="exact">
-                <td>28</td>
-                <td>
-                    <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Yaodu District People's Hospital</div></div>
-                    <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>尧都区人民医院</div></div>
-                </td>
-                <td>
-                    <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>尧都区人民医院</div></div>
-                    <div class='reason-box reason-step4'><strong>Step 4 (AI选择理由):</strong> 输入名称“临汾市尧都区人民医院”与候选医院“尧都区人民医院”在“尧都区人民医院”部分完全匹配，且城市“临汾”一致。这是对同一实体的明确指称，因此置信度为“高”。</div><div class='reason-box reason-step5'><strong>Step 5 (判断理由):</strong> ❌ 不一致 - nan</div>
-                </td>
-                <td><div class='confidence-block'>High</div></td>
-                <td><b>最终名称:</b> 尧都区人民医院<div class='final-decision exact'>标签与匹配一致</div></td>
-            </tr>
-            
+                <tr data-category="judged_inconsistent" data-confidence="name_en匹配" data-trans-confidence="N/A">
+                    <td>fd9ed3f374323110f3b7898cc1dfd8e9</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Affiliated Hospital of Hebei University</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>广东医科大学附属医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>N/A</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>河北大学附属医院</div></div>
+                        <div class='reason-box reason-step5'><strong>Step 5 (判断理由):</strong> ❌ 不一致 - 两所医院名称差异大，分别位于不同省份（广东和河北），不属于同一实体。 [2, 20, 21]</div>
+                    </td>
+                    <td><div class='confidence-block'>name_en匹配</div></td>
+                    <td><b>最终名称:</b> <i style='color:grey;'>N/A</i><div class='final-decision judged_inconsistent'>AI判断: 不一致（需人工核查）</div></td>
+                </tr>
+                
 
-            <tr data-category="judged_inconsistent">
-                <td>29</td>
-                <td>
-                    <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Nanning Langdong Kaiyuan Hospital</div></div>
-                    <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>广西医大开元埌东医院</div></div>
-                </td>
-                <td>
-                    <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>南宁市第一人民医院</div></div>
-                    <div class='reason-box reason-step4'><strong>Step 4 (AI选择理由):</strong> 输入名称“南宁市埌东开元医院”与候选医院“南宁市第一人民医院”同属南宁市，但名称上没有直接关联。“开元”和“第一人民”是不同的医院名称。缺乏证据表明两者是同一实体，故置信度为“低”。</div><div class='reason-box reason-step5'><strong>Step 5 (判断理由):</strong> ❌ 不一致 - Web searches indicate these are distinct institutions. While '埌东医院' (Langdong Hospital) is mentioned in relation to '广西医大' (Guangxi Medical University) and '南宁市' (Nanning City), search results for '南宁市第一人民医院' do not show a connection to '广西医大开元埌东医院'. Instead, '南宁市第一人民医院埌东医院' appears to be a separate entity, a branch or affiliated hospital of Nanning First People's Hospital. [4, 5, 11, 22]</div>
-                </td>
-                <td><div class='confidence-block'>Low</div></td>
-                <td><b>最终名称:</b> <i style='color:grey;'>N/A</i><div class='final-decision judged_inconsistent'>AI判断: 不一致（需人工核查）</div></td>
-            </tr>
-            
+                <tr data-category="exact" data-confidence="name_en匹配" data-trans-confidence="N/A">
+                    <td>e7418ebf7b613cb90203afb3ffc7689a</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Henan Provincial People's Hospital</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>河南省人民医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>N/A</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>河南省人民医院</div></div>
+                        
+                    </td>
+                    <td><div class='confidence-block'>name_en匹配</div></td>
+                    <td><b>最终名称:</b> 河南省人民医院<div class='final-decision exact'>标签与匹配一致</div></td>
+                </tr>
+                
 
-            <tr data-category="judged_inconsistent">
-                <td>30</td>
-                <td>
-                    <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Chengdu Xunshang Perennial Hospital</div></div>
-                    <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>成都鹏瑞利国际医疗健康中心</div></div>
-                </td>
-                <td>
-                    <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>四川省医学科学院·四川省人民医院</div></div>
-                    <div class='reason-box reason-step4'><strong>Step 4 (AI选择理由):</strong> 输入名称“成都迅尚常年医院”与候选医院“四川省医学科学院·四川省人民医院”在地理位置（成都）上一致。然而，“迅尚常年”与“四川省人民医院”名称差异巨大，缺乏直接证据表明两者是同一实体，因此置信度为“低”。</div><div class='reason-box reason-step5'><strong>Step 5 (判断理由):</strong> ❌ 不一致 - Web searches show that '成都鹏瑞利国际医疗健康中心' is a large medical complex with multiple institutions within it, including '成都循上鹏瑞利医院'. However, '四川省医学科学院·四川省人民医院' is a distinct, major provincial hospital and is not identified as being part of the PengruiLi International Medical Health Center. [10, 18, 19, 23, 24]</div>
-                </td>
-                <td><div class='confidence-block'>Low</div></td>
-                <td><b>最终名称:</b> <i style='color:grey;'>N/A</i><div class='final-decision judged_inconsistent'>AI判断: 不一致（需人工核查）</div></td>
-            </tr>
-            
+                <tr data-category="exact" data-confidence="exact_name" data-trans-confidence="High">
+                    <td>6595f777e4acb42e97b004d2ce305174</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Union Hospital, Tongji Medical College, Huazhong University of Science and Technology</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>华中科技大学同济医学院附属协和医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>High</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>华中科技大学同济医学院附属协和医院</div></div>
+                        
+                    </td>
+                    <td><div class='confidence-block'>exact_name</div></td>
+                    <td><b>最终名称:</b> 华中科技大学同济医学院附属协和医院<div class='final-decision exact'>标签与匹配一致</div></td>
+                </tr>
+                
 
-            <tr data-category="exact">
-                <td>31</td>
-                <td>
-                    <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>郑华信民生医院</div></div>
-                    <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>新郑华信民生医院</div></div>
-                </td>
-                <td>
-                    <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>新郑华信民生医院</div></div>
-                    <div class='reason-box reason-step4'><strong>Step 4 (AI选择理由):</strong> 候选医院“新郑华信民生医院”与输入名称“郑华信民生医院”非常相似，特别是在“华信民生医院”和城市“郑州（新郑是郑州代管县级市）”方面。网络搜索确认“新郑华信民生医院”是当地正规医院，与输入信息相符，因此置信度为“高”。</div><div class='reason-box reason-step5'><strong>Step 5 (判断理由):</strong> ❌ 不一致 - nan</div>
-                </td>
-                <td><div class='confidence-block'>High</div></td>
-                <td><b>最终名称:</b> 新郑华信民生医院<div class='final-decision exact'>标签与匹配一致</div></td>
-            </tr>
-            
+                <tr data-category="exact" data-confidence="exact_name" data-trans-confidence="High">
+                    <td>4fd4ecb19856992051a50d97e577b552</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Union Hospital, Tongji Medical College, Huazhong University of Science and Technology</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>华中科技大学同济医学院附属协和医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>High</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>华中科技大学同济医学院附属协和医院</div></div>
+                        
+                    </td>
+                    <td><div class='confidence-block'>exact_name</div></td>
+                    <td><b>最终名称:</b> 华中科技大学同济医学院附属协和医院<div class='final-decision exact'>标签与匹配一致</div></td>
+                </tr>
+                
 
-            <tr data-category="unmatched">
-                <td>0</td>
-                <td>
-                    <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Hepatopancreatobiliary Surgery Institute of Gansu Province</div></div>
-                    <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>兰州大学第二医院</div></div>
-                </td>
-                <td>
-                    <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>None</div></div>
-                    <div class='reason-box reason-step4'><strong>Step 4 (AI选择理由):</strong> 输入信息“甘肃省肝胆胰外科研究所”与提供的候选医院名称和地点均不匹配。所有候选医院均非肝胆胰外科研究机构，且其地理位置与“甘肃”的关联性不明确或不符。</div><div class='reason-box reason-step5'><strong>Step 5 (判断理由):</strong> ❌ 不一致 - nan</div>
-                </td>
-                <td><div class='confidence-block'>No Match</div></td>
-                <td><b>最终名称:</b> <i style='color:grey;'>N/A</i><div class='final-decision unmatched'>未匹配</div></td>
-            </tr>
-            
+                <tr data-category="judged_inconsistent" data-confidence="exact_name" data-trans-confidence="High">
+                    <td>7275e8948cc6c231fb1ed8520c3d7636</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Union Hospital, Tongji Medical College, Huazhong University of Science and Technology</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>华中科技大学同济医学院附属同济医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>High</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>华中科技大学同济医学院附属协和医院</div></div>
+                        <div class='reason-box reason-step5'><strong>Step 5 (判断理由):</strong> ❌ 不一致 - 两所医院名称相似但为不同的实体，均是华中科技大学同济医学院的附属医院，且在多个医院排行榜中分别列出。 [3, 5, 6, 7, 9, 12, 13]</div>
+                    </td>
+                    <td><div class='confidence-block'>exact_name</div></td>
+                    <td><b>最终名称:</b> <i style='color:grey;'>N/A</i><div class='final-decision judged_inconsistent'>AI判断: 不一致（需人工核查）</div></td>
+                </tr>
+                
 
-            <tr data-category="exact">
-                <td>1</td>
-                <td>
-                    <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>The Ninth Affiliated Hospital of Guangxi Medical University, Beihai People's Hospital</div></div>
-                    <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>北海市人民医院</div></div>
-                </td>
-                <td>
-                    <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>北海市人民医院</div></div>
-                    <div class='reason-box reason-step4'><strong>Step 4 (AI选择理由):</strong> 输入名称“广西医科大学第九附属医院北海市人民医院”包含“北海市人民医院”。搜索结果显示“北海市人民医院”的别名包括“广西医科大学第九临床医学院”、“广西医科大学附属第九医院”，这表明北海市人民医院与广西医科大学第九附属医院之间存在明确的附属关系。因此，认定“北海市人民医院”是主要匹配项，置信度为“高”.</div><div class='reason-box reason-step5'><strong>Step 5 (判断理由):</strong> ❌ 不一致 - nan</div>
-                </td>
-                <td><div class='confidence-block'>High</div></td>
-                <td><b>最终名称:</b> 北海市人民医院<div class='final-decision exact'>标签与匹配一致</div></td>
-            </tr>
-            
+                <tr data-category="exact" data-confidence="exact_name" data-trans-confidence="High">
+                    <td>de290b5e93b7f49e5f62b8ecc11627bc</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Union Hospital, Tongji Medical College, Huazhong University of Science and Technology</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>华中科技大学同济医学院附属协和医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>High</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>华中科技大学同济医学院附属协和医院</div></div>
+                        
+                    </td>
+                    <td><div class='confidence-block'>exact_name</div></td>
+                    <td><b>最终名称:</b> 华中科技大学同济医学院附属协和医院<div class='final-decision exact'>标签与匹配一致</div></td>
+                </tr>
+                
 
-            <tr data-category="unmatched">
-                <td>2</td>
-                <td>
-                    <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Changsha Xinyan Medical Cosmetology Hospital</div></div>
-                    <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>长沙鹏爱医疗美容有限公司</div></div>
-                </td>
-                <td>
-                    <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>None</div></div>
-                    <div class='reason-box reason-step4'><strong>Step 4 (AI选择理由):</strong> 输入名称“长沙星妍医疗美容医院”表明这是一个医疗美容医院。在提供的候选医院列表中，所有医院均为综合性医院、专科医院或研究机构，没有医疗美容医院，因此无法匹配。</div><div class='reason-box reason-step5'><strong>Step 5 (判断理由):</strong> ❌ 不一致 - nan</div>
-                </td>
-                <td><div class='confidence-block'>No Match</div></td>
-                <td><b>最终名称:</b> <i style='color:grey;'>N/A</i><div class='final-decision unmatched'>未匹配</div></td>
-            </tr>
-            
+                <tr data-category="exact" data-confidence="exact_name" data-trans-confidence="High">
+                    <td>08cc508b3581de798c119357f4e43ff6</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Union Hospital Tongji Medical College Huazhong University of Science and Technology</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>华中科技大学同济医学院附属协和医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>High</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>华中科技大学同济医学院附属协和医院</div></div>
+                        
+                    </td>
+                    <td><div class='confidence-block'>exact_name</div></td>
+                    <td><b>最终名称:</b> 华中科技大学同济医学院附属协和医院<div class='final-decision exact'>标签与匹配一致</div></td>
+                </tr>
+                
 
-            <tr data-category="judged_inconsistent">
-                <td>3</td>
-                <td>
-                    <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Hanbin District First Hospital</div></div>
-                    <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>汉滨区第一医院</div></div>
-                </td>
-                <td>
-                    <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>杭州市第一人民医院</div></div>
-                    <div class='reason-box reason-step4'><strong>Step 4 (AI选择理由):</strong> 输入的“杭州市汉滨区第一医院”可能存在地名混淆。“汉滨区”实际属于陕西省安康市，而非杭州市。候选医院“杭州市第一人民医院”与输入的城市“杭州”匹配，但与“汉滨区”的关联性不符。在排除地名错误后，根据“第一医院”的命名习惯，可能为“杭州市第一人民医院”，但缺乏直接证据，置信度低。</div><div class='reason-box reason-step5'><strong>Step 5 (判断理由):</strong> ❌ 不一致 - 两个医院名称和地理位置均不相似。</div>
-                </td>
-                <td><div class='confidence-block'>Low</div></td>
-                <td><b>最终名称:</b> <i style='color:grey;'>N/A</i><div class='final-decision judged_inconsistent'>AI判断: 不一致（需人工核查）</div></td>
-            </tr>
-            
+                <tr data-category="exact" data-confidence="exact_name" data-trans-confidence="High">
+                    <td>8f84c0a3abbe76660edde6f8b02c97f1</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Union Hospital, Tongji Medical College, Huazhong University of Science and Technology</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>华中科技大学同济医学院附属协和医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>High</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>华中科技大学同济医学院附属协和医院</div></div>
+                        
+                    </td>
+                    <td><div class='confidence-block'>exact_name</div></td>
+                    <td><b>最终名称:</b> 华中科技大学同济医学院附属协和医院<div class='final-decision exact'>标签与匹配一致</div></td>
+                </tr>
+                
 
-            <tr data-category="unmatched">
-                <td>4</td>
-                <td>
-                    <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Datong Hui and Tu Autonomous County People's Hospital</div></div>
-                    <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>大通县人民医院</div></div>
-                </td>
-                <td>
-                    <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>None</div></div>
-                    <div class='reason-box reason-step4'><strong>Step 4 (AI选择理由):</strong> 输入的“大冶市回族自治县人民医院”存在地理信息冲突。“大冶市”属于湖北省黄石市，“回族自治县”通常指宁夏、甘肃等地，且输入名称与任何候选医院名称或地理位置都不匹配。所有候选医院均不符合输入信息。</div><div class='reason-box reason-step5'><strong>Step 5 (判断理由):</strong> ❌ 不一致 - nan</div>
-                </td>
-                <td><div class='confidence-block'>No Match</div></td>
-                <td><b>最终名称:</b> <i style='color:grey;'>N/A</i><div class='final-decision unmatched'>未匹配</div></td>
-            </tr>
-            
+                <tr data-category="judged_inconsistent" data-confidence="exact_name" data-trans-confidence="High">
+                    <td>b125e93ce627449e902ae88046896c1f</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Union Hospital, Tongji Medical College, Huazhong University of Science and Technology</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>华中科技大学同济医学院附属同济医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>High</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>华中科技大学同济医学院附属协和医院</div></div>
+                        <div class='reason-box reason-step5'><strong>Step 5 (判断理由):</strong> ❌ 不一致 - 两所医院名称相似但为不同的实体，均是华中科技大学同济医学院的附属医院，且在多个医院排行榜中分别列出。 [3, 5, 6, 7, 9, 12, 13]</div>
+                    </td>
+                    <td><div class='confidence-block'>exact_name</div></td>
+                    <td><b>最终名称:</b> <i style='color:grey;'>N/A</i><div class='final-decision judged_inconsistent'>AI判断: 不一致（需人工核查）</div></td>
+                </tr>
+                
 
-            <tr data-category="unmatched">
-                <td>5</td>
-                <td>
-                    <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Shanshan County People's Hospital</div></div>
-                    <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>砀山县人民医院</div></div>
-                </td>
-                <td>
-                    <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>None</div></div>
-                    <div class='reason-box reason-step4'><strong>Step 4 (AI选择理由):</strong> 输入名称“鄯善县人民医院”指向新疆维吾尔自治区吐鲁番市下辖的鄯善县。在候选医院列表中，虽然有“新疆维吾尔自治区人民医院”等，但没有直接匹配“鄯善县人民医院”的选项，也无明确证据表明任何候选医院是其附属或同名机构。因此，匹配失败。</div><div class='reason-box reason-step5'><strong>Step 5 (判断理由):</strong> ❌ 不一致 - nan</div>
-                </td>
-                <td><div class='confidence-block'>No Match</div></td>
-                <td><b>最终名称:</b> <i style='color:grey;'>N/A</i><div class='final-decision unmatched'>未匹配</div></td>
-            </tr>
-            
+                <tr data-category="exact" data-confidence="exact_name" data-trans-confidence="High">
+                    <td>185b2d4e8c589f5243440c11fbdc1af8</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Union Hospital Tongji Medical College Huazhong University Of Science And Technology</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>华中科技大学同济医学院附属协和医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>High</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>华中科技大学同济医学院附属协和医院</div></div>
+                        
+                    </td>
+                    <td><div class='confidence-block'>exact_name</div></td>
+                    <td><b>最终名称:</b> 华中科技大学同济医学院附属协和医院<div class='final-decision exact'>标签与匹配一致</div></td>
+                </tr>
+                
 
-            <tr data-category="unmatched">
-                <td>6</td>
-                <td>
-                    <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Baijiali Medical Cosmetology Hospital</div></div>
-                    <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>深圳市人民医院</div></div>
-                </td>
-                <td>
-                    <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>None</div></div>
-                    <div class='reason-box reason-step4'><strong>Step 4 (AI选择理由):</strong> 输入名称“辽宁百嘉丽医疗美容医院”表明这是一个医疗美容医院。在提供的候选医院列表中，尽管存在“吴氏嘉美医疗美容医院”，但其地处云南丽江，与输入信息的“辽宁”不符。其他候选医院均为综合医院或专科医院，不匹配医疗美容医院的类别。</div><div class='reason-box reason-step5'><strong>Step 5 (判断理由):</strong> ❌ 不一致 - nan</div>
-                </td>
-                <td><div class='confidence-block'>No Match</div></td>
-                <td><b>最终名称:</b> <i style='color:grey;'>N/A</i><div class='final-decision unmatched'>未匹配</div></td>
-            </tr>
-            
+                <tr data-category="exact" data-confidence="exact_name" data-trans-confidence="High">
+                    <td>a27672b1d10ccb79217cde04a98f109c</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Union Hospital medical college Huazhong University of Science and Technology</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>华中科技大学同济医学院附属协和医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>High</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>华中科技大学同济医学院附属协和医院</div></div>
+                        
+                    </td>
+                    <td><div class='confidence-block'>exact_name</div></td>
+                    <td><b>最终名称:</b> 华中科技大学同济医学院附属协和医院<div class='final-decision exact'>标签与匹配一致</div></td>
+                </tr>
+                
 
-            <tr data-category="judged_inconsistent">
-                <td>7</td>
-                <td>
-                    <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Qujiang District People's Hospital (Quzhou Second People's Hospital)</div></div>
-                    <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>衢州市第二人民医院</div></div>
-                </td>
-                <td>
-                    <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>曲靖市第二人民医院</div></div>
-                    <div class='reason-box reason-step4'><strong>Step 4 (AI选择理由):</strong> 输入信息“曲靖市曲江区人民医院(曲靖市第二人民医院)(推测)”明确提到了“曲靖市第二人民医院”。在候选列表中，“曲靖市第二人民医院”存在且地理位置与“曲靖市”一致。因此，认定为直接匹配，置信度为“高”。</div><div class='reason-box reason-step5'><strong>Step 5 (判断理由):</strong> ❌ 不一致 - 名称相似但地理位置不同（衢州 vs 曲靖）。</div>
-                </td>
-                <td><div class='confidence-block'>High</div></td>
-                <td><b>最终名称:</b> <i style='color:grey;'>N/A</i><div class='final-decision judged_inconsistent'>AI判断: 不一致（需人工核查）</div></td>
-            </tr>
-            
+                <tr data-category="exact" data-confidence="exact_name" data-trans-confidence="High">
+                    <td>d929a26196fd5ceabb35fc85d9968962</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Union Hospital, Tongji Medical College, Huazhong University of Science and Technology</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>华中科技大学同济医学院附属协和医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>High</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>华中科技大学同济医学院附属协和医院</div></div>
+                        
+                    </td>
+                    <td><div class='confidence-block'>exact_name</div></td>
+                    <td><b>最终名称:</b> 华中科技大学同济医学院附属协和医院<div class='final-decision exact'>标签与匹配一致</div></td>
+                </tr>
+                
 
-            <tr data-category="exact">
-                <td>8</td>
-                <td>
-                    <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>东南大学附属东大医院</div></div>
-                    <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>东南大学附属中大医院</div></div>
-                </td>
-                <td>
-                    <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>东南大学附属中大医院</div></div>
-                    <div class='reason-box reason-step4'><strong>Step 4 (AI选择理由):</strong> 输入名称“东南大学附属东大医院”与候选医院“东南大学附属中大医院”在“东南大学附属”部分一致。“中大医院”是“东大医院”的常用简称或历史名称。通过网络搜索，确认“东南大学附属中大医院”是现有且权威的医院，并且常被简称为“东大医院”或与之相关联。因此，置信度为“高”.</div><div class='reason-box reason-step5'><strong>Step 5 (判断理由):</strong> ❌ 不一致 - nan</div>
-                </td>
-                <td><div class='confidence-block'>High</div></td>
-                <td><b>最终名称:</b> 东南大学附属中大医院<div class='final-decision exact'>标签与匹配一致</div></td>
-            </tr>
-            
+                <tr data-category="exact" data-confidence="exact_alias" data-trans-confidence="High">
+                    <td>188de9bfcdb084689a466caa16e78c2c</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>The First Affiliated Hospital of Nanjing Medical University</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>江苏省人民医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>High</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>江苏省人民医院</div></div>
+                        
+                    </td>
+                    <td><div class='confidence-block'>exact_alias</div></td>
+                    <td><b>最终名称:</b> 江苏省人民医院<div class='final-decision exact'>标签与匹配一致</div></td>
+                </tr>
+                
 
-            <tr data-category="unmatched">
-                <td>9</td>
-                <td>
-                    <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Fugou County Minzhong Hospital</div></div>
-                    <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>扶沟县人民医院</div></div>
-                </td>
-                <td>
-                    <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>None</div></div>
-                    <div class='reason-box reason-step4'><strong>Step 4 (AI选择理由):</strong> 输入的“扶沟县民众医院”与周口市的“周口市人民医院”或“周口市第六人民医院”在名称上存在显著差异，特别是“民众医院”与“人民医院”的直接关联性无法确认。在候选列表中，没有直接匹配“扶沟县民众医院”的医院。因此，置信度为“无匹配”。</div><div class='reason-box reason-step5'><strong>Step 5 (判断理由):</strong> ❌ 不一致 - nan</div>
-                </td>
-                <td><div class='confidence-block'>No Match</div></td>
-                <td><b>最终名称:</b> <i style='color:grey;'>N/A</i><div class='final-decision unmatched'>未匹配</div></td>
-            </tr>
-            
+                <tr data-category="exact" data-confidence="exact_alias" data-trans-confidence="High">
+                    <td>03675d87c317d0de3b5001e56f45f217</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>the First Affiliated Hospital of Nanjing Medical University</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>江苏省人民医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>High</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>江苏省人民医院</div></div>
+                        
+                    </td>
+                    <td><div class='confidence-block'>exact_alias</div></td>
+                    <td><b>最终名称:</b> 江苏省人民医院<div class='final-decision exact'>标签与匹配一致</div></td>
+                </tr>
+                
 
-            <tr data-category="judged_inconsistent">
-                <td>14</td>
-                <td>
-                    <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Linyi Lanshan Ruiya Traditional Chinese Medicine Hospital</div></div>
-                    <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>临沂市兰山区中医院</div></div>
-                </td>
-                <td>
-                    <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>临沂兰山睿雅中医医院</div></div>
-                    <div class='reason-box reason-step5'><strong>Step 5 (判断理由):</strong> ❌ 不一致 - 名称相似但“中医院”和“睿雅中医医院”代表不同的实体。</div>
-                </td>
-                <td><div class='confidence-block'>name_en匹配</div></td>
-                <td><b>最终名称:</b> <i style='color:grey;'>N/A</i><div class='final-decision judged_inconsistent'>AI判断: 不一致（需人工核查）</div></td>
-            </tr>
-            
+                <tr data-category="exact" data-confidence="exact_alias" data-trans-confidence="High">
+                    <td>172de4290ea836134146ff7756d5457e</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>The First Affiliated Hospital with Nanjing Medical University</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>江苏省人民医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>High</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>江苏省人民医院</div></div>
+                        
+                    </td>
+                    <td><div class='confidence-block'>exact_alias</div></td>
+                    <td><b>最终名称:</b> 江苏省人民医院<div class='final-decision exact'>标签与匹配一致</div></td>
+                </tr>
+                
 
-            <tr data-category="judged_inconsistent">
-                <td>35</td>
-                <td>
-                    <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Taizhou Hospital of Zhejiang Province affiliated to Wenzhou Medical University</div></div>
-                    <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>浙江省台州医院</div></div>
-                </td>
-                <td>
-                    <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>台州市康复医院</div></div>
-                    <div class='reason-box reason-step5'><strong>Step 5 (判断理由):</strong> ❌ 不一致 - These are distinct hospitals in Taizhou. '浙江省台州医院' is a large general hospital, while '台州市康复医院' is a specialized rehabilitation hospital that was transformed from a general hospital in 2020. [6, 9, 13, 25]</div>
-                </td>
-                <td><div class='confidence-block'>name_en匹配</div></td>
-                <td><b>最终名称:</b> <i style='color:grey;'>N/A</i><div class='final-decision judged_inconsistent'>AI判断: 不一致（需人工核查）</div></td>
-            </tr>
-            
+                <tr data-category="exact" data-confidence="exact_alias" data-trans-confidence="High">
+                    <td>6986c80ebdb121f41e519f187806b1dc</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>The First Affiliated Hospital of Nanjing Medical University</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>江苏省人民医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>High</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>江苏省人民医院</div></div>
+                        
+                    </td>
+                    <td><div class='confidence-block'>exact_alias</div></td>
+                    <td><b>最终名称:</b> 江苏省人民医院<div class='final-decision exact'>标签与匹配一致</div></td>
+                </tr>
+                
 
-            <tr data-category="exact">
-                <td>36</td>
-                <td>
-                    <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Fuyong People's Hospital, Bao'an District, Shenzhen</div></div>
-                    <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>深圳市宝安区福永人民医院</div></div>
-                </td>
-                <td>
-                    <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>深圳市宝安区福永人民医院</div></div>
-                    <div class='reason-box reason-step5'><strong>Step 5 (判断理由):</strong> ❌ 不一致 - nan</div>
-                </td>
-                <td><div class='confidence-block'>exact_name</div></td>
-                <td><b>最终名称:</b> 深圳市宝安区福永人民医院<div class='final-decision exact'>标签与匹配一致</div></td>
-            </tr>
-            
+                <tr data-category="exact" data-confidence="exact_alias" data-trans-confidence="High">
+                    <td>1931b6d4e2209da932866706a9a136fc</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>The First Affiliated Hospital with Nanjing Medical University</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>江苏省人民医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>High</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>江苏省人民医院</div></div>
+                        
+                    </td>
+                    <td><div class='confidence-block'>exact_alias</div></td>
+                    <td><b>最终名称:</b> 江苏省人民医院<div class='final-decision exact'>标签与匹配一致</div></td>
+                </tr>
+                
 
-            <tr data-category="exact">
-                <td>40</td>
-                <td>
-                    <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Tongjiang People's Hospital</div></div>
-                    <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>通江县人民医院</div></div>
-                </td>
-                <td>
-                    <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>通江县人民医院</div></div>
-                    <div class='reason-box reason-step5'><strong>Step 5 (判断理由):</strong> ❌ 不一致 - nan</div>
-                </td>
-                <td><div class='confidence-block'>exact_name</div></td>
-                <td><b>最终名称:</b> 通江县人民医院<div class='final-decision exact'>标签与匹配一致</div></td>
-            </tr>
-            
+                <tr data-category="exact" data-confidence="exact_alias" data-trans-confidence="High">
+                    <td>c546c02fa040f33c8b848ecb7149d1ad</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>The First Affiliated Hospital of Nanjing Medical University</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>江苏省人民医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>High</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>江苏省人民医院</div></div>
+                        
+                    </td>
+                    <td><div class='confidence-block'>exact_alias</div></td>
+                    <td><b>最终名称:</b> 江苏省人民医院<div class='final-decision exact'>标签与匹配一致</div></td>
+                </tr>
+                
 
-            <tr data-category="exact">
-                <td>41</td>
-                <td>
-                    <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>HeJi hospital affiliated ChangZhi medical college</div></div>
-                    <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>长治医学院附属和济医院</div></div>
-                </td>
-                <td>
-                    <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>长治医学院附属和济医院</div></div>
-                    <div class='reason-box reason-step5'><strong>Step 5 (判断理由):</strong> ❌ 不一致 - nan</div>
-                </td>
-                <td><div class='confidence-block'>exact_name</div></td>
-                <td><b>最终名称:</b> 长治医学院附属和济医院<div class='final-decision exact'>标签与匹配一致</div></td>
-            </tr>
-            
+                <tr data-category="exact" data-confidence="exact_alias" data-trans-confidence="High">
+                    <td>9f44130b3301e1a69c5ca528df94ee93</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>The first affiliated Hospital with Nanjing Medical University</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>江苏省人民医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>High</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>江苏省人民医院</div></div>
+                        
+                    </td>
+                    <td><div class='confidence-block'>exact_alias</div></td>
+                    <td><b>最终名称:</b> 江苏省人民医院<div class='final-decision exact'>标签与匹配一致</div></td>
+                </tr>
+                
 
-            <tr data-category="judged_inconsistent">
-                <td>23</td>
-                <td>
-                    <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>People's Hospital of Nanchang City</div></div>
-                    <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>南昌市人民医院（南昌市第三医院）</div></div>
-                </td>
-                <td>
-                    <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>南昌县人民医院</div></div>
-                    <div class='reason-box reason-step5'><strong>Step 5 (判断理由):</strong> ❌ 不一致 - 虽然都位于南昌，但“南昌市人民医院”与“南昌县人民医院”是不同的行政级别和地域范围的医院。</div>
-                </td>
-                <td><div class='confidence-block'>partial</div></td>
-                <td><b>最终名称:</b> <i style='color:grey;'>N/A</i><div class='final-decision judged_inconsistent'>AI判断: 不一致（需人工核查）</div></td>
-            </tr>
-            
+                <tr data-category="exact" data-confidence="exact_alias" data-trans-confidence="High">
+                    <td>b2f1050d82d38103532d998c84aab36c</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>The First Affiliated Hospital of Nanjing Medical University</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>江苏省人民医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>High</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>江苏省人民医院</div></div>
+                        
+                    </td>
+                    <td><div class='confidence-block'>exact_alias</div></td>
+                    <td><b>最终名称:</b> 江苏省人民医院<div class='final-decision exact'>标签与匹配一致</div></td>
+                </tr>
+                
 
-            <tr data-category="exact">
-                <td>37</td>
-                <td>
-                    <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Mouping People's Hospital (Yantai Affiliated Hospital of Binzhou Medical College)</div></div>
-                    <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>滨州医学院烟台附属医院</div></div>
-                </td>
-                <td>
-                    <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>滨州医学院烟台附属医院</div></div>
-                    <div class='reason-box reason-step5'><strong>Step 5 (判断理由):</strong> ❌ 不一致 - nan</div>
-                </td>
-                <td><div class='confidence-block'>partial</div></td>
-                <td><b>最终名称:</b> 滨州医学院烟台附属医院<div class='final-decision exact'>标签与匹配一致</div></td>
-            </tr>
-            
+                <tr data-category="exact" data-confidence="exact_name" data-trans-confidence="High">
+                    <td>f81aa91229c55499b0c71013a3b37863</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Tongji Hospital, Tongji Medical College, Huazhong University of Science and technology</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>华中科技大学同济医学院附属同济医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>High</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>华中科技大学同济医学院附属同济医院</div></div>
+                        
+                    </td>
+                    <td><div class='confidence-block'>exact_name</div></td>
+                    <td><b>最终名称:</b> 华中科技大学同济医学院附属同济医院<div class='final-decision exact'>标签与匹配一致</div></td>
+                </tr>
+                
+
+                <tr data-category="exact" data-confidence="exact_name" data-trans-confidence="High">
+                    <td>db2fc81120c42c34c4eb7b7bfb36787f</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Tongji Hospital Tongji Medical College of HUST /ID# 237835</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>华中科技大学同济医学院附属同济医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>High</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>华中科技大学同济医学院附属同济医院</div></div>
+                        
+                    </td>
+                    <td><div class='confidence-block'>exact_name</div></td>
+                    <td><b>最终名称:</b> 华中科技大学同济医学院附属同济医院<div class='final-decision exact'>标签与匹配一致</div></td>
+                </tr>
+                
+
+                <tr data-category="exact" data-confidence="exact_name" data-trans-confidence="High">
+                    <td>eb4a065f02b892456618171c35e9b18e</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Tongji Hospital Tongji Medical College of HUST</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>华中科技大学同济医学院附属同济医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>High</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>华中科技大学同济医学院附属同济医院</div></div>
+                        
+                    </td>
+                    <td><div class='confidence-block'>exact_name</div></td>
+                    <td><b>最终名称:</b> 华中科技大学同济医学院附属同济医院<div class='final-decision exact'>标签与匹配一致</div></td>
+                </tr>
+                
+
+                <tr data-category="exact" data-confidence="exact_name" data-trans-confidence="High">
+                    <td>08710eb5d90e863b036c5a1920b701ec</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Tongji Hospital, Tongji Medical College, Huazhong University of Science & Technology</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>华中科技大学同济医学院附属同济医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>High</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>华中科技大学同济医学院附属同济医院</div></div>
+                        
+                    </td>
+                    <td><div class='confidence-block'>exact_name</div></td>
+                    <td><b>最终名称:</b> 华中科技大学同济医学院附属同济医院<div class='final-decision exact'>标签与匹配一致</div></td>
+                </tr>
+                
+
+                <tr data-category="exact" data-confidence="exact_name" data-trans-confidence="High">
+                    <td>4f3c98d034050aa03debaa939b56671e</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Tongji Hospital, Tongji Medical College, Huazhong University of Science & Technology</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>华中科技大学同济医学院附属同济医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>High</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>华中科技大学同济医学院附属同济医院</div></div>
+                        
+                    </td>
+                    <td><div class='confidence-block'>exact_name</div></td>
+                    <td><b>最终名称:</b> 华中科技大学同济医学院附属同济医院<div class='final-decision exact'>标签与匹配一致</div></td>
+                </tr>
+                
+
+                <tr data-category="exact" data-confidence="exact_name" data-trans-confidence="High">
+                    <td>ec76bf4b389e732d982bb81b24048d33</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Tongji Hospital, Tongji Medical College, Huazhong University of Science and Technology</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>华中科技大学同济医学院附属同济医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>High</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>华中科技大学同济医学院附属同济医院</div></div>
+                        
+                    </td>
+                    <td><div class='confidence-block'>exact_name</div></td>
+                    <td><b>最终名称:</b> 华中科技大学同济医学院附属同济医院<div class='final-decision exact'>标签与匹配一致</div></td>
+                </tr>
+                
+
+                <tr data-category="exact" data-confidence="exact_name" data-trans-confidence="High">
+                    <td>c4a75380c7befed3052962c738d6fcf8</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Tongji hospital affiliated to huazhong university of science and technology</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>华中科技大学同济医学院附属同济医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>High</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>华中科技大学同济医学院附属同济医院</div></div>
+                        
+                    </td>
+                    <td><div class='confidence-block'>exact_name</div></td>
+                    <td><b>最终名称:</b> 华中科技大学同济医学院附属同济医院<div class='final-decision exact'>标签与匹配一致</div></td>
+                </tr>
+                
+
+                <tr data-category="exact" data-confidence="exact_name" data-trans-confidence="High">
+                    <td>0b76aa5e29f5b7616e787f743203af74</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Tongji Hospital of Tongji Medical College, Huazhong University of Science and Technology</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>华中科技大学同济医学院附属同济医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>High</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>华中科技大学同济医学院附属同济医院</div></div>
+                        
+                    </td>
+                    <td><div class='confidence-block'>exact_name</div></td>
+                    <td><b>最终名称:</b> 华中科技大学同济医学院附属同济医院<div class='final-decision exact'>标签与匹配一致</div></td>
+                </tr>
+                
+
+                <tr data-category="exact" data-confidence="exact_name" data-trans-confidence="High">
+                    <td>5b92dd13c9cbf11215ad734a462781f8</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Tongji Hospital Affiliated to Huazhong University of Science and Technology</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>华中科技大学同济医学院附属同济医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>High</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>华中科技大学同济医学院附属同济医院</div></div>
+                        
+                    </td>
+                    <td><div class='confidence-block'>exact_name</div></td>
+                    <td><b>最终名称:</b> 华中科技大学同济医学院附属同济医院<div class='final-decision exact'>标签与匹配一致</div></td>
+                </tr>
+                
+
+                <tr data-category="exact" data-confidence="exact_name" data-trans-confidence="High">
+                    <td>0017b06f50863aeccc8d1450e1c11bcb</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Tongji Hospital of Tongji Medical College Huazhong University of Science and Technology</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>华中科技大学同济医学院附属同济医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>High</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>华中科技大学同济医学院附属同济医院</div></div>
+                        
+                    </td>
+                    <td><div class='confidence-block'>exact_name</div></td>
+                    <td><b>最终名称:</b> 华中科技大学同济医学院附属同济医院<div class='final-decision exact'>标签与匹配一致</div></td>
+                </tr>
+                
+
+                <tr data-category="exact" data-confidence="exact_name" data-trans-confidence="High">
+                    <td>f895919e8d638582ee4695de811231f3</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Tongji Hospital Tongji Medical College Huazhong University of Science and Technology</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>华中科技大学同济医学院附属同济医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>High</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>华中科技大学同济医学院附属同济医院</div></div>
+                        
+                    </td>
+                    <td><div class='confidence-block'>exact_name</div></td>
+                    <td><b>最终名称:</b> 华中科技大学同济医学院附属同济医院<div class='final-decision exact'>标签与匹配一致</div></td>
+                </tr>
+                
+
+                <tr data-category="exact" data-confidence="exact_name" data-trans-confidence="High">
+                    <td>90523d187a4052c2f98b70d8db4d22e3</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Tongji Hospital, Tongji Medical College, Huazhong University of Science and Technology</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>华中科技大学同济医学院附属同济医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>High</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>华中科技大学同济医学院附属同济医院</div></div>
+                        
+                    </td>
+                    <td><div class='confidence-block'>exact_name</div></td>
+                    <td><b>最终名称:</b> 华中科技大学同济医学院附属同济医院<div class='final-decision exact'>标签与匹配一致</div></td>
+                </tr>
+                
+
+                <tr data-category="exact" data-confidence="exact_name" data-trans-confidence="High">
+                    <td>ee6dc56d23720897aa4c8dcfbc2d0dec</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Tongji Hospital affiliated to Tongji Medical College of Huazhong University of Science & Technology</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>华中科技大学同济医学院附属同济医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>High</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>华中科技大学同济医学院附属同济医院</div></div>
+                        
+                    </td>
+                    <td><div class='confidence-block'>exact_name</div></td>
+                    <td><b>最终名称:</b> 华中科技大学同济医学院附属同济医院<div class='final-decision exact'>标签与匹配一致</div></td>
+                </tr>
+                
+
+                <tr data-category="exact" data-confidence="exact_name" data-trans-confidence="High">
+                    <td>bdd2be7baeae455379726f9a71064a2c</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>The Second Hospital of Anhui Medical University</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>安徽医科大学第二附属医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>High</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>安徽医科大学第二附属医院</div></div>
+                        
+                    </td>
+                    <td><div class='confidence-block'>exact_name</div></td>
+                    <td><b>最终名称:</b> 安徽医科大学第二附属医院<div class='final-decision exact'>标签与匹配一致</div></td>
+                </tr>
+                
+
+                <tr data-category="exact" data-confidence="exact_name" data-trans-confidence="High">
+                    <td>39c71cb569117c8bb6c7831e2df61271</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>The Second Hospital of Anhui Medical University</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>安徽医科大学第二附属医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>High</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>安徽医科大学第二附属医院</div></div>
+                        
+                    </td>
+                    <td><div class='confidence-block'>exact_name</div></td>
+                    <td><b>最终名称:</b> 安徽医科大学第二附属医院<div class='final-decision exact'>标签与匹配一致</div></td>
+                </tr>
+                
+
+                <tr data-category="exact" data-confidence="exact_name" data-trans-confidence="High">
+                    <td>180ca157a1e38d8598d4b8064a189cfd</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>The Second Hospital of Anhui Medical University</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>安徽医科大学第二附属医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>High</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>安徽医科大学第二附属医院</div></div>
+                        
+                    </td>
+                    <td><div class='confidence-block'>exact_name</div></td>
+                    <td><b>最终名称:</b> 安徽医科大学第二附属医院<div class='final-decision exact'>标签与匹配一致</div></td>
+                </tr>
+                
+
+                <tr data-category="exact" data-confidence="exact_name" data-trans-confidence="High">
+                    <td>3a0bafe7e949211171a1f189aca71c3c</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>The Second Hospital of Anhui Medical University</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>安徽医科大学第二附属医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>High</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>安徽医科大学第二附属医院</div></div>
+                        
+                    </td>
+                    <td><div class='confidence-block'>exact_name</div></td>
+                    <td><b>最终名称:</b> 安徽医科大学第二附属医院<div class='final-decision exact'>标签与匹配一致</div></td>
+                </tr>
+                
+
+                <tr data-category="exact" data-confidence="exact_name" data-trans-confidence="High">
+                    <td>d9811341d73059172693a33b54bd7e5c</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>People's Hospital of Henan Province</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>河南省人民医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>High</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>河南省人民医院</div></div>
+                        
+                    </td>
+                    <td><div class='confidence-block'>exact_name</div></td>
+                    <td><b>最终名称:</b> 河南省人民医院<div class='final-decision exact'>标签与匹配一致</div></td>
+                </tr>
+                
+
+                <tr data-category="exact" data-confidence="exact_name" data-trans-confidence="High">
+                    <td>80b91804a0cb9e7e0acb67eab8fed250</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Henan Provincal People's Hospital</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>河南省人民医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>High</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>河南省人民医院</div></div>
+                        
+                    </td>
+                    <td><div class='confidence-block'>exact_name</div></td>
+                    <td><b>最终名称:</b> 河南省人民医院<div class='final-decision exact'>标签与匹配一致</div></td>
+                </tr>
+                
+
+                <tr data-category="exact" data-confidence="exact_name" data-trans-confidence="High">
+                    <td>ff1099d67a51e1277bc2aea7989b7e42</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Henan Provincial People's Hospital</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>河南省人民医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>High</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>河南省人民医院</div></div>
+                        
+                    </td>
+                    <td><div class='confidence-block'>exact_name</div></td>
+                    <td><b>最终名称:</b> 河南省人民医院<div class='final-decision exact'>标签与匹配一致</div></td>
+                </tr>
+                
+
+                <tr data-category="exact" data-confidence="exact_alias" data-trans-confidence="High">
+                    <td>a683068ade1f750377429b8c98eb4e48</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Guangxi Medical University Cancer Hospital</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>广西壮族自治区肿瘤医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>High</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>广西壮族自治区肿瘤医院</div></div>
+                        
+                    </td>
+                    <td><div class='confidence-block'>exact_alias</div></td>
+                    <td><b>最终名称:</b> 广西壮族自治区肿瘤医院<div class='final-decision exact'>标签与匹配一致</div></td>
+                </tr>
+                
+
+                <tr data-category="exact" data-confidence="exact_name" data-trans-confidence="High">
+                    <td>0354668e666b1e15dbf7c6295e29c7eb</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Peking University Third Hospital</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>北京大学第三医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>High</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>北京大学第三医院</div></div>
+                        
+                    </td>
+                    <td><div class='confidence-block'>exact_name</div></td>
+                    <td><b>最终名称:</b> 北京大学第三医院<div class='final-decision exact'>标签与匹配一致</div></td>
+                </tr>
+                
+
+                <tr data-category="exact" data-confidence="exact_name" data-trans-confidence="High">
+                    <td>01739c9c72462a4a3dbb8a2e0614154d</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Peking University Third Hospital</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>北京大学第三医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>High</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>北京大学第三医院</div></div>
+                        
+                    </td>
+                    <td><div class='confidence-block'>exact_name</div></td>
+                    <td><b>最终名称:</b> 北京大学第三医院<div class='final-decision exact'>标签与匹配一致</div></td>
+                </tr>
+                
+
+                <tr data-category="exact" data-confidence="exact_name" data-trans-confidence="High">
+                    <td>3a0dee750be49bb1b5e75c1e3024fb5b</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Peking University Third Hospital</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>北京大学第三医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>High</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>北京大学第三医院</div></div>
+                        
+                    </td>
+                    <td><div class='confidence-block'>exact_name</div></td>
+                    <td><b>最终名称:</b> 北京大学第三医院<div class='final-decision exact'>标签与匹配一致</div></td>
+                </tr>
+                
+
+                <tr data-category="exact" data-confidence="exact_name" data-trans-confidence="High">
+                    <td>17ea7e400a0ceae4748e68aa27b18740</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Peking University Third Hospital</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>北京大学第三医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>High</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>北京大学第三医院</div></div>
+                        
+                    </td>
+                    <td><div class='confidence-block'>exact_name</div></td>
+                    <td><b>最终名称:</b> 北京大学第三医院<div class='final-decision exact'>标签与匹配一致</div></td>
+                </tr>
+                
+
+                <tr data-category="exact" data-confidence="exact_name" data-trans-confidence="High">
+                    <td>ed1dcadd8fd850b33f9530b37d9f03c6</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Peking University Third Hospital</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>北京大学第三医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>High</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>北京大学第三医院</div></div>
+                        
+                    </td>
+                    <td><div class='confidence-block'>exact_name</div></td>
+                    <td><b>最终名称:</b> 北京大学第三医院<div class='final-decision exact'>标签与匹配一致</div></td>
+                </tr>
+                
+
+                <tr data-category="exact" data-confidence="exact_name" data-trans-confidence="High">
+                    <td>d004c21ab500398a766329abd1baabdb</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Peking University Third Hospital</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>北京大学第三医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>High</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>北京大学第三医院</div></div>
+                        
+                    </td>
+                    <td><div class='confidence-block'>exact_name</div></td>
+                    <td><b>最终名称:</b> 北京大学第三医院<div class='final-decision exact'>标签与匹配一致</div></td>
+                </tr>
+                
+
+                <tr data-category="exact" data-confidence="exact_name" data-trans-confidence="High">
+                    <td>6d8505d81cbf89ba32a0e1aceb93b153</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Peking University Third Hospital</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>北京大学第三医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>High</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>北京大学第三医院</div></div>
+                        
+                    </td>
+                    <td><div class='confidence-block'>exact_name</div></td>
+                    <td><b>最终名称:</b> 北京大学第三医院<div class='final-decision exact'>标签与匹配一致</div></td>
+                </tr>
+                
+
+                <tr data-category="exact" data-confidence="exact_name" data-trans-confidence="High">
+                    <td>6b9bbc8b6e28565725a4981e90c93c1c</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Peking University Third Hospital</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>北京大学第三医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>High</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>北京大学第三医院</div></div>
+                        
+                    </td>
+                    <td><div class='confidence-block'>exact_name</div></td>
+                    <td><b>最终名称:</b> 北京大学第三医院<div class='final-decision exact'>标签与匹配一致</div></td>
+                </tr>
+                
+
+                <tr data-category="exact" data-confidence="exact_name" data-trans-confidence="High">
+                    <td>8c08c2ca871835febbf4ff692bc58138</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Peking University Third Hospital</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>北京大学第三医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>High</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>北京大学第三医院</div></div>
+                        
+                    </td>
+                    <td><div class='confidence-block'>exact_name</div></td>
+                    <td><b>最终名称:</b> 北京大学第三医院<div class='final-decision exact'>标签与匹配一致</div></td>
+                </tr>
+                
+
+                <tr data-category="exact" data-confidence="exact_name" data-trans-confidence="High">
+                    <td>dc684126543297e24eaced9ba6119bf6</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Peking University 3rd Hospital /ID# 213443</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>北京大学第三医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>High</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>北京大学第三医院</div></div>
+                        
+                    </td>
+                    <td><div class='confidence-block'>exact_name</div></td>
+                    <td><b>最终名称:</b> 北京大学第三医院<div class='final-decision exact'>标签与匹配一致</div></td>
+                </tr>
+                
+
+                <tr data-category="exact" data-confidence="exact_name" data-trans-confidence="High">
+                    <td>e536ff46c040bc77c533fed776d4a875</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Peking University Third Hospital</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>北京大学第三医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>High</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>北京大学第三医院</div></div>
+                        
+                    </td>
+                    <td><div class='confidence-block'>exact_name</div></td>
+                    <td><b>最终名称:</b> 北京大学第三医院<div class='final-decision exact'>标签与匹配一致</div></td>
+                </tr>
+                
+
+                <tr data-category="exact" data-confidence="exact_name" data-trans-confidence="High">
+                    <td>ff68343e19a1b5f7f36f8e4fb40650f5</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Peking University Third Hospital</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>北京大学第三医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>High</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>北京大学第三医院</div></div>
+                        
+                    </td>
+                    <td><div class='confidence-block'>exact_name</div></td>
+                    <td><b>最终名称:</b> 北京大学第三医院<div class='final-decision exact'>标签与匹配一致</div></td>
+                </tr>
+                
+
+                <tr data-category="exact" data-confidence="exact_name" data-trans-confidence="High">
+                    <td>02985d3c146724ba64ec4f91af593752</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Peking University Third Hospital</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>北京大学第三医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>High</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>北京大学第三医院</div></div>
+                        
+                    </td>
+                    <td><div class='confidence-block'>exact_name</div></td>
+                    <td><b>最终名称:</b> 北京大学第三医院<div class='final-decision exact'>标签与匹配一致</div></td>
+                </tr>
+                
+
+                <tr data-category="exact" data-confidence="exact_name" data-trans-confidence="High">
+                    <td>b6ba37b0597e2ac8485c0dd1582f55b4</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Jiangsu Province Hospital</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>江苏省人民医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>High</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>江苏省人民医院</div></div>
+                        
+                    </td>
+                    <td><div class='confidence-block'>exact_name</div></td>
+                    <td><b>最终名称:</b> 江苏省人民医院<div class='final-decision exact'>标签与匹配一致</div></td>
+                </tr>
+                
+
+                <tr data-category="exact" data-confidence="exact_name" data-trans-confidence="High">
+                    <td>fc1b37991d7efe046006566371397a33</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Jiangsu Province Hospital</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>江苏省人民医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>High</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>江苏省人民医院</div></div>
+                        
+                    </td>
+                    <td><div class='confidence-block'>exact_name</div></td>
+                    <td><b>最终名称:</b> 江苏省人民医院<div class='final-decision exact'>标签与匹配一致</div></td>
+                </tr>
+                
+
+                <tr data-category="exact" data-confidence="exact_name" data-trans-confidence="High">
+                    <td>d9125aa77fd838c558d8d91f05222e96</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Jiangsu Province Hospital /ID# 161122</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>江苏省人民医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>High</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>江苏省人民医院</div></div>
+                        
+                    </td>
+                    <td><div class='confidence-block'>exact_name</div></td>
+                    <td><b>最终名称:</b> 江苏省人民医院<div class='final-decision exact'>标签与匹配一致</div></td>
+                </tr>
+                
+
+                <tr data-category="exact" data-confidence="exact_name" data-trans-confidence="High">
+                    <td>e0e2ff273baae54e156800f622f0fc7a</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>People's Hospital of Jiangsu Province</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>江苏省人民医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>High</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>江苏省人民医院</div></div>
+                        
+                    </td>
+                    <td><div class='confidence-block'>exact_name</div></td>
+                    <td><b>最终名称:</b> 江苏省人民医院<div class='final-decision exact'>标签与匹配一致</div></td>
+                </tr>
+                
+
+                <tr data-category="exact" data-confidence="exact_name" data-trans-confidence="High">
+                    <td>e5df32b166f1040f36e613bd2bdb3692</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Jiangsu Province Hospital</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>江苏省人民医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>High</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>江苏省人民医院</div></div>
+                        
+                    </td>
+                    <td><div class='confidence-block'>exact_name</div></td>
+                    <td><b>最终名称:</b> 江苏省人民医院<div class='final-decision exact'>标签与匹配一致</div></td>
+                </tr>
+                
+
+                <tr data-category="exact" data-confidence="exact_name" data-trans-confidence="High">
+                    <td>a79119af9d9381e5b04a7e1689db1215</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Jiangsu People's Hospital</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>江苏省人民医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>High</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>江苏省人民医院</div></div>
+                        
+                    </td>
+                    <td><div class='confidence-block'>exact_name</div></td>
+                    <td><b>最终名称:</b> 江苏省人民医院<div class='final-decision exact'>标签与匹配一致</div></td>
+                </tr>
+                
+
+                <tr data-category="judged_inconsistent" data-confidence="exact_alias" data-trans-confidence="High">
+                    <td>dcecfb160f119650b4863d99c5a7c57e</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Tongji Hospital Affiliated to Tongji University</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>华中科技大学同济医学院附属同济医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>High</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>上海市同济医院</div></div>
+                        <div class='reason-box reason-step5'><strong>Step 5 (判断理由):</strong> ❌ 不一致 - 两所医院名称中虽都有“同济医院”，但'华中科技大学同济医学院附属同济医院'位于武汉，由德国医生宝隆于1900年在上海创建后于1955年迁至武汉。 [8, 10, 12, 13] '上海市同济医院'是同济大学医学院的附属医院。历史上同济大学医学院在院系调整中拆分到武汉后，同济大学于2000年合并上海铁道医学院，改名为同济大学医学院。这两者是不同的实体。 [16]</div>
+                    </td>
+                    <td><div class='confidence-block'>exact_alias</div></td>
+                    <td><b>最终名称:</b> <i style='color:grey;'>N/A</i><div class='final-decision judged_inconsistent'>AI判断: 不一致（需人工核查）</div></td>
+                </tr>
+                
+
+                <tr data-category="judged_inconsistent" data-confidence="exact_alias" data-trans-confidence="High">
+                    <td>637d4949bd4fec71af6b2918cbaa9727</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Tongji Hospital of Tongji University</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>华中科技大学同济医学院附属同济医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>High</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>上海市同济医院</div></div>
+                        <div class='reason-box reason-step5'><strong>Step 5 (判断理由):</strong> ❌ 不一致 - 两所医院名称中虽都有“同济医院”，但'华中科技大学同济医学院附属同济医院'位于武汉，由德国医生宝隆于1900年在上海创建后于1955年迁至武汉。 [8, 10, 12, 13] '上海市同济医院'是同济大学医学院的附属医院。历史上同济大学医学院在院系调整中拆分到武汉后，同济大学于2000年合并上海铁道医学院，改名为同济大学医学院。这两者是不同的实体。 [16]</div>
+                    </td>
+                    <td><div class='confidence-block'>exact_alias</div></td>
+                    <td><b>最终名称:</b> <i style='color:grey;'>N/A</i><div class='final-decision judged_inconsistent'>AI判断: 不一致（需人工核查）</div></td>
+                </tr>
+                
+
+                <tr data-category="judged_inconsistent" data-confidence="exact_alias" data-trans-confidence="High">
+                    <td>6d0a24b9af0e00917f6719db9e517876</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Tongji Hospital, Tongji University</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>华中科技大学同济医学院附属同济医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>High</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>上海市同济医院</div></div>
+                        <div class='reason-box reason-step5'><strong>Step 5 (判断理由):</strong> ❌ 不一致 - 两所医院名称中虽都有“同济医院”，但'华中科技大学同济医学院附属同济医院'位于武汉，由德国医生宝隆于1900年在上海创建后于1955年迁至武汉。 [8, 10, 12, 13] '上海市同济医院'是同济大学医学院的附属医院。历史上同济大学医学院在院系调整中拆分到武汉后，同济大学于2000年合并上海铁道医学院，改名为同济大学医学院。这两者是不同的实体。 [16]</div>
+                    </td>
+                    <td><div class='confidence-block'>exact_alias</div></td>
+                    <td><b>最终名称:</b> <i style='color:grey;'>N/A</i><div class='final-decision judged_inconsistent'>AI判断: 不一致（需人工核查）</div></td>
+                </tr>
+                
+
+                <tr data-category="exact" data-confidence="exact_name" data-trans-confidence="Low">
+                    <td>dd03ba70459803ef4d59021a2bed42a7</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>China-Japan Union Hospital of Jilin University</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>吉林大学中日联谊医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>Low</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>吉林大学中日联谊医院</div></div>
+                        
+                    </td>
+                    <td><div class='confidence-block'>exact_name</div></td>
+                    <td><b>最终名称:</b> 吉林大学中日联谊医院<div class='final-decision exact'>标签与匹配一致</div></td>
+                </tr>
+                
+
+                <tr data-category="exact" data-confidence="exact_name" data-trans-confidence="High">
+                    <td>de6ac16d1e2ae0721aeb9b8368d3b7b6</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Sino-Japan Friendship Hospital, Jilin University</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>吉林大学中日联谊医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>High</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>吉林大学中日联谊医院</div></div>
+                        
+                    </td>
+                    <td><div class='confidence-block'>exact_name</div></td>
+                    <td><b>最终名称:</b> 吉林大学中日联谊医院<div class='final-decision exact'>标签与匹配一致</div></td>
+                </tr>
+                
+
+                <tr data-category="exact" data-confidence="exact_name" data-trans-confidence="High">
+                    <td>e9cb0d932c1a782c70172769261c7a74</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>The First Affiliated Hospital of Guangzhou Medical University ( Site 1330)</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>广州医科大学附属第一医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>High</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>广州医科大学附属第一医院</div></div>
+                        
+                    </td>
+                    <td><div class='confidence-block'>exact_name</div></td>
+                    <td><b>最终名称:</b> 广州医科大学附属第一医院<div class='final-decision exact'>标签与匹配一致</div></td>
+                </tr>
+                
+
+                <tr data-category="exact" data-confidence="exact_alias" data-trans-confidence="High">
+                    <td>3b7a9d20e34c163a59148bc993583ef2</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Affiliated Tumor Hospital of Guangxi Medical University.</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>广西壮族自治区肿瘤医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>High</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>广西壮族自治区肿瘤医院</div></div>
+                        
+                    </td>
+                    <td><div class='confidence-block'>exact_alias</div></td>
+                    <td><b>最终名称:</b> 广西壮族自治区肿瘤医院<div class='final-decision exact'>标签与匹配一致</div></td>
+                </tr>
+                
+
+                <tr data-category="exact" data-confidence="exact_alias" data-trans-confidence="High">
+                    <td>0b98e5a80580401b175fb3c272dfc8bc</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Guangdong Medical School First Affiliated Hospital</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>广东医科大学附属医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>High</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>广东医科大学附属医院</div></div>
+                        
+                    </td>
+                    <td><div class='confidence-block'>exact_alias</div></td>
+                    <td><b>最终名称:</b> 广东医科大学附属医院<div class='final-decision exact'>标签与匹配一致</div></td>
+                </tr>
+                
+
+                <tr data-category="exact" data-confidence="exact_alias" data-trans-confidence="High">
+                    <td>4fa1a7c8eaf0131149a33d50b7bdbdb5</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Jiangsu Provincial Maternal and Child Health Hospital</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>江苏省人民医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>High</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>江苏省人民医院</div></div>
+                        
+                    </td>
+                    <td><div class='confidence-block'>exact_alias</div></td>
+                    <td><b>最终名称:</b> 江苏省人民医院<div class='final-decision exact'>标签与匹配一致</div></td>
+                </tr>
+                
+
+                <tr data-category="exact" data-confidence="partial" data-trans-confidence="High">
+                    <td>eefcee0da9e114a9e9dfc95d3e4b14a8</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Guangzhou Institute of Respiratory Disease</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>广州医科大学附属第一医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>High</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>广州医科大学附属第一医院</div></div>
+                        
+                    </td>
+                    <td><div class='confidence-block'>partial</div></td>
+                    <td><b>最终名称:</b> 广州医科大学附属第一医院<div class='final-decision exact'>标签与匹配一致</div></td>
+                </tr>
+                
+
+                <tr data-category="exact" data-confidence="partial" data-trans-confidence="High">
+                    <td>de0c1c14954231b230c2b9f55d783b0b</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Clinical Center of Reproductive Medicine at the First Affiliated Hospital of Nanjing Medical University</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>江苏省人民医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>High</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>江苏省人民医院</div></div>
+                        
+                    </td>
+                    <td><div class='confidence-block'>partial</div></td>
+                    <td><b>最终名称:</b> 江苏省人民医院<div class='final-decision exact'>标签与匹配一致</div></td>
+                </tr>
+                
+
+                <tr data-category="exact" data-confidence="partial" data-trans-confidence="High">
+                    <td>daf9722b665f519433e07aa2978dad6e</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Department of Anaesthesiology, Tongji Hospital of Tongji Medical College, Huazhong University of Science and Technology</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>华中科技大学同济医学院附属同济医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>High</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>华中科技大学同济医学院附属同济医院</div></div>
+                        
+                    </td>
+                    <td><div class='confidence-block'>partial</div></td>
+                    <td><b>最终名称:</b> 华中科技大学同济医学院附属同济医院<div class='final-decision exact'>标签与匹配一致</div></td>
+                </tr>
+                
+
+                <tr data-category="exact" data-confidence="partial" data-trans-confidence="High">
+                    <td>ee6bfbabcaaf13be822a42526519bc11</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Department of Anaesthesiology, Tongji Hospital of Tongji Medical College, Huazhong University of Science and Technology</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>华中科技大学同济医学院附属同济医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>High</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>华中科技大学同济医学院附属同济医院</div></div>
+                        
+                    </td>
+                    <td><div class='confidence-block'>partial</div></td>
+                    <td><b>最终名称:</b> 华中科技大学同济医学院附属同济医院<div class='final-decision exact'>标签与匹配一致</div></td>
+                </tr>
+                
+
+                <tr data-category="exact" data-confidence="partial" data-trans-confidence="High">
+                    <td>8baae7d9871a5ea58138a814dea3a89e</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Department of Urology, The First Affiliated Hospital of Guangzhou Medical University</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>广州医科大学附属第一医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>High</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>广州医科大学附属第一医院</div></div>
+                        
+                    </td>
+                    <td><div class='confidence-block'>partial</div></td>
+                    <td><b>最终名称:</b> 广州医科大学附属第一医院<div class='final-decision exact'>标签与匹配一致</div></td>
+                </tr>
+                
+
+                <tr data-category="exact" data-confidence="partial" data-trans-confidence="High">
+                    <td>70b1944401dec7d2be63e750c82445b1</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Department of Neurology, Union Hospital, Tongji Medical College, Huazhong University of Science and Technology</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>华中科技大学同济医学院附属协和医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>High</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>华中科技大学同济医学院附属协和医院</div></div>
+                        
+                    </td>
+                    <td><div class='confidence-block'>partial</div></td>
+                    <td><b>最终名称:</b> 华中科技大学同济医学院附属协和医院<div class='final-decision exact'>标签与匹配一致</div></td>
+                </tr>
+                
+
+                <tr data-category="exact" data-confidence="partial" data-trans-confidence="Low">
+                    <td>ff9232f9c083676fa3e3b164d59225e2</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Guangxi Medical University Affiliated Tumor Hospital-Oncology Dept. of Breast and Bone Soft Tissue (</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>广西壮族自治区肿瘤医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>Low</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>广西壮族自治区肿瘤医院</div></div>
+                        
+                    </td>
+                    <td><div class='confidence-block'>partial</div></td>
+                    <td><b>最终名称:</b> 广西壮族自治区肿瘤医院<div class='final-decision exact'>标签与匹配一致</div></td>
+                </tr>
+                
+
+                <tr data-category="exact" data-confidence="partial" data-trans-confidence="Low">
+                    <td>01fc1e4cfceb0942017251871cf76d01</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Guangzhou Institute of Respiratory Disease</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>广州医科大学附属第一医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>Low</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>广州医科大学附属第一医院</div></div>
+                        
+                    </td>
+                    <td><div class='confidence-block'>partial</div></td>
+                    <td><b>最终名称:</b> 广州医科大学附属第一医院<div class='final-decision exact'>标签与匹配一致</div></td>
+                </tr>
+                
+
+                <tr data-category="exact" data-confidence="partial" data-trans-confidence="High">
+                    <td>5b3c8f586373b8f73e87e51a5269e238</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>Cancer Center of Union Hospital, Huazhong University of Science and Technology</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>华中科技大学同济医学院附属协和医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>High</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>华中科技大学同济医学院附属协和医院</div></div>
+                        
+                    </td>
+                    <td><div class='confidence-block'>partial</div></td>
+                    <td><b>最终名称:</b> 华中科技大学同济医学院附属协和医院<div class='final-decision exact'>标签与匹配一致</div></td>
+                </tr>
+                
+
+                <tr data-category="exact" data-confidence="partial" data-trans-confidence="High">
+                    <td>fee62369fc242c32bc94947261490057</td>
+                    <td>
+                        <div class="input-block affiliation-block"><strong>Affiliation:</strong><div>GCP Office of The First Affiliated Hospital of Guangzhou Medical University</div></div>
+                        <div class="input-block pi-site-block" style="margin-top: 10px;"><strong>PI Site Name:</strong><div>广州医科大学附属第一医院</div></div>
+                    </td>
+                    <td><div class='trans-confidence-block'>High</div></td>
+                    <td>
+                        <div class="input-block"><strong>匹配候选 (Matched Site):</strong><div>广州医科大学附属第一医院</div></div>
+                        
+                    </td>
+                    <td><div class='confidence-block'>partial</div></td>
+                    <td><b>最终名称:</b> 广州医科大学附属第一医院<div class='final-decision exact'>标签与匹配一致</div></td>
+                </tr>
+                
                 </tbody>
             </table>
         </div>
@@ -799,20 +1892,30 @@ The changes in the HTML template include:
 
     <script>
         const searchInput = document.getElementById('search-input');
-        const filterSelect = document.getElementById('filter-select');
-        const table = document.querySelector('table');
+        const categoryFilter = document.getElementById('category-filter');
+        const confidenceFilter = document.getElementById('confidence-filter');
+        const transConfidenceFilter = document.getElementById('trans-confidence-filter');
+        const table = document.getElementById('results-table');
         const rows = table.querySelectorAll('tbody tr');
 
         function filterAndSearch() {
             const searchTerm = searchInput.value.toLowerCase();
-            const filterTerm = filterSelect.value;
+            const categoryTerm = categoryFilter.value;
+            const confidenceTerm = confidenceFilter.value;
+            const transConfidenceTerm = transConfidenceFilter.value;
 
             rows.forEach(row => {
-                const isVisibleByFilter = filterTerm === 'all' || row.dataset.category === filterTerm;
+                const category = row.getAttribute('data-category');
+                const confidence = row.getAttribute('data-confidence') || 'N/A';
+                const transConfidence = row.getAttribute('data-trans-confidence') || 'N/A';
                 const rowText = row.textContent.toLowerCase();
-                const isVisibleBySearch = searchTerm === '' || rowText.includes(searchTerm);
 
-                if (isVisibleByFilter && isVisibleBySearch) {
+                const categoryMatch = categoryTerm === 'all' || category === categoryTerm;
+                const confidenceMatch = confidenceTerm === 'all' || confidence === confidenceTerm;
+                const transConfidenceMatch = transConfidenceTerm === 'all' || transConfidence === transConfidenceTerm;
+                const searchMatch = searchTerm === '' || rowText.includes(searchTerm);
+
+                if (categoryMatch && confidenceMatch && transConfidenceMatch && searchMatch) {
                     row.style.display = '';
                 } else {
                     row.style.display = 'none';
@@ -820,8 +1923,11 @@ The changes in the HTML template include:
             });
         }
 
+        window.addEventListener('load', filterAndSearch);
         searchInput.addEventListener('keyup', filterAndSearch);
-        filterSelect.addEventListener('change', filterAndSearch);
+        categoryFilter.addEventListener('change', filterAndSearch);
+        confidenceFilter.addEventListener('change', filterAndSearch);
+        transConfidenceFilter.addEventListener('change', filterAndSearch);
     </script>
 </body>
 </html>

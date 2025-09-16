@@ -18,11 +18,22 @@ from rapidfuzz import process, fuzz
 from functools import lru_cache
 from tqdm import tqdm
 from config_utils import Config, logger
+import os  # 添加用于文件存在性检查
 
 def step_3_candidate_matching(config: Config):
     logger.info("\n" + "="*50)
     logger.info("STEP 3: 正在对翻译后的中文名进行候选匹配...")
     logger.info("="*50)
+
+    # 检查输出文件是否已经存在
+    output_files = [
+        config.META_MATCH_JSON_FILE,
+        config.META_PARTIAL_EXACT_MATCHED_FILE,
+        config.AI_META_INPUT_FILE
+    ]
+    if all(os.path.exists(file) for file in output_files):
+        logger.info("所有输出文件已存在，跳过候选匹配步骤。")
+        return True
 
     try:
         data = []
@@ -31,9 +42,12 @@ def step_3_candidate_matching(config: Config):
                 json_obj = json.loads(line.strip())
                 if json_obj.get('status') == 'success':
                     data.append({
-                        'original_id': json_obj['original_id'],
+                        'esid': json_obj['esid'],
+                        'data_source': json_obj['data_source'],
+                        'nct_id': json_obj['nct_id'],
                         'affiliation': json_obj['original_input'],
                         'affiliation_cn': json_obj['original_input_zh'],
+                        "trans_confidence": json_obj['trans_confidence'],
                         'state': json_obj.get('state', ''),
                         'city': json_obj.get('city', '')
                     })
@@ -83,14 +97,14 @@ def step_3_candidate_matching(config: Config):
         logger.info("进行精确匹配...")
         matched_ids = set()
         for _, row in tqdm(translated_df_input.iterrows(), total=len(translated_df_input), desc="精确匹配中"):
-            original_id = row['original_id']
+            esid = row['esid']
             original_query = row['affiliation_cn']
             query_lower = original_query.lower()
             exact_match_found = False
             for hospital_name, data in consolidated_candidates.items():
                 if query_lower == hospital_name.lower():
                     match_info = {
-                        "original_id": original_id,
+                        "esid": esid,
                         "matched_text": hospital_name,
                         "hospital_name": hospital_name,
                         "hospital_name_en": data['name_en'],
@@ -100,13 +114,13 @@ def step_3_candidate_matching(config: Config):
                         "match_type": "exact_name"
                     }
                     result_dict.setdefault("exact_matches", {}).setdefault(original_query, []).append(match_info)
-                    matched_ids.add(original_id)
+                    matched_ids.add(esid)
                     exact_match_found = True
                     break
                 for alias in data['aliases']:
                     if query_lower == str(alias).lower():
                         match_info = {
-                            "original_id": original_id,
+                            "esid": esid,
                             "matched_text": alias,
                             "hospital_name": hospital_name,
                             "hospital_name_en": data['name_en'],
@@ -116,7 +130,7 @@ def step_3_candidate_matching(config: Config):
                             "match_type": "exact_alias"
                         }
                         result_dict.setdefault("exact_matches", {}).setdefault(original_query, []).append(match_info)
-                        matched_ids.add(original_id)
+                        matched_ids.add(esid)
                         exact_match_found = True
                         break
                 if exact_match_found:
@@ -172,9 +186,9 @@ def step_3_candidate_matching(config: Config):
                 return temp_text.replace("TEMP_NUM", num_part).replace("TEMP_AFFIX", affix_part)
             return text
 
-        df_for_partial = translated_df_input[~translated_df_input['original_id'].isin(matched_ids)]
+        df_for_partial = translated_df_input[~translated_df_input['esid'].isin(matched_ids)]
         for _, row in tqdm(df_for_partial.iterrows(), total=len(df_for_partial), desc="部分匹配中"):
-            original_id = row['original_id']
+            esid = row['esid']
             original_query = row['affiliation_cn']
             query_lower = original_query.lower()
             best_match_info = None
@@ -249,7 +263,7 @@ def step_3_candidate_matching(config: Config):
             if best_match_info:
                 source_data = best_match_info['data']
                 match_info = {
-                    "original_id": original_id,
+                    "esid": esid,
                     "matched_text": matched_text,
                     "hospital_name": best_match_info['hospital_name'],
                     "hospital_name_en": source_data['name_en'],
@@ -260,10 +274,10 @@ def step_3_candidate_matching(config: Config):
                     "partial_type": partial_type
                 }
                 result_dict.setdefault("partial_matches", {}).setdefault(original_query, []).append(match_info)
-                matched_ids.add(original_id)
+                matched_ids.add(esid)
 
         logger.info("准备模糊匹配...")
-        df_for_fuzzy = translated_df_input[~translated_df_input['original_id'].isin(matched_ids)]
+        df_for_fuzzy = translated_df_input[~translated_df_input['esid'].isin(matched_ids)]
         if not df_for_fuzzy.empty:
             @lru_cache(maxsize=None)
             def extract_location(text: str) -> list:
@@ -368,7 +382,7 @@ def step_3_candidate_matching(config: Config):
                 return final_score
 
             for _, row in tqdm(df_for_fuzzy.iterrows(), total=len(df_for_fuzzy), desc="模糊匹配中"):
-                original_id = row['original_id']
+                esid = row['esid']
                 original_query = row['affiliation_cn']
                 state = row['state']
                 city = row['city']
@@ -388,7 +402,7 @@ def step_3_candidate_matching(config: Config):
                     hospital_name_key = source_info['main_name']
                     if hospital_name_key not in seen_hospital_names:
                         fuzzy_results.append({
-                            "original_id": original_id,
+                            "esid": esid,
                             "matched_text": match_text,
                             "hospital_name": hospital_name_key,
                             "hospital_name_en": source_info['main_name_en'],
@@ -402,9 +416,9 @@ def step_3_candidate_matching(config: Config):
                 if fuzzy_results:
                     result_dict.setdefault("fuzzy_matches", {}).setdefault(original_query, []).extend(fuzzy_results)
 
-        exact_ids = {m['original_id'] for matches in result_dict.get('exact_matches', {}).values() for m in matches}
-        partial_ids = {m['original_id'] for matches in result_dict.get('partial_matches', {}).values() for m in matches}
-        fuzzy_ids = {m['original_id'] for matches in result_dict.get('fuzzy_matches', {}).values() for m in matches}
+        exact_ids = {m['esid'] for matches in result_dict.get('exact_matches', {}).values() for m in matches}
+        partial_ids = {m['esid'] for matches in result_dict.get('partial_matches', {}).values() for m in matches}
+        fuzzy_ids = {m['esid'] for matches in result_dict.get('fuzzy_matches', {}).values() for m in matches}
         partial_ids -= exact_ids
         fuzzy_ids -= exact_ids
         fuzzy_ids -= partial_ids
@@ -412,14 +426,14 @@ def step_3_candidate_matching(config: Config):
         exact_count = len(exact_ids)
         partial_count = len(partial_ids)
         fuzzy_count = len(fuzzy_ids)
-        all_input_ids = set(translated_df_input['original_id'])
+        all_input_ids = set(translated_df_input['esid'])
         final_all_matched_ids = exact_ids | partial_ids | fuzzy_ids
         unmatched_ids = all_input_ids - final_all_matched_ids
         unmatched_count = len(unmatched_ids)
 
-        id_to_query_map = pd.Series(translated_df_input.affiliation_cn.values, index=translated_df_input.original_id).to_dict()
+        id_to_query_map = pd.Series(translated_df_input.affiliation_cn.values, index=translated_df_input.esid).to_dict()
         result_dict["unmatched_queries"] = [
-            {"original_id": oid, "query": id_to_query_map.get(oid, "未知查询")}
+            {"esid": oid, "query": id_to_query_map.get(oid, "未知查询")}
             for oid in unmatched_ids
         ]
 
@@ -434,19 +448,22 @@ def step_3_candidate_matching(config: Config):
         return result_dict
 
     match_results = query_hospitals(site_dict_df, translated_df, config.META_MATCH_JSON_FILE)
-    translated_df_indexed = translated_df.set_index('original_id')
+    translated_df_indexed = translated_df.set_index('esid')
     exact_partial_data = []
     exact_partial_ids = set()
     for match_type in ['exact_matches', 'partial_matches']:
         for query, matches in match_results.get(match_type, {}).items():
             for match in matches:
-                oid = match['original_id']
+                oid = match['esid']
                 if oid not in exact_partial_ids:
                     original_record = translated_df_indexed.loc[oid]
                     exact_partial_data.append({
-                        'original_id': oid,
+                        'esid': oid,
+                        "data_source": original_record['data_source'],
+                        "nct_id": original_record['nct_id'],
                         'affiliation': original_record['affiliation'],
                         'affiliation_cn': original_record['affiliation_cn'],
+                        "trans_confidence": original_record['trans_confidence'],
                         'state': original_record['state'],
                         'city': original_record['city'],
                         'matched_site': match['hospital_name'],
@@ -462,7 +479,7 @@ def step_3_candidate_matching(config: Config):
     logger.info(f"精确/部分匹配找到 {len(exact_partial_df)} 条记录")
 
     ai_meta_input_data = []
-    fuzzy_ids = {m['original_id'] for matches in match_results.get('fuzzy_matches', {}).values() for m in matches}
+    fuzzy_ids = {m['esid'] for matches in match_results.get('fuzzy_matches', {}).values() for m in matches}
     fuzzy_ids -= exact_partial_ids
     for oid in fuzzy_ids:
         original_record = translated_df_indexed.loc[oid]
@@ -471,7 +488,7 @@ def step_3_candidate_matching(config: Config):
         candidates = []
         seen_hospitals = set()
         for match in matches:
-            if match['original_id'] == oid and match['hospital_name'] not in seen_hospitals:
+            if match['esid'] == oid and match['hospital_name'] not in seen_hospitals:
                 alias_list = match['hospital_alias']
                 if isinstance(alias_list, np.ndarray):
                     alias_list = alias_list.tolist()
@@ -487,9 +504,12 @@ def step_3_candidate_matching(config: Config):
                 seen_hospitals.add(match['hospital_name'])
         if candidates:
             ai_meta_input_data.append({
-                'original_id': oid,
+                'esid': oid,
+                "data_source": original_record['data_source'],
+                "nct_id": original_record['nct_id'],
                 'affiliation': original_record['affiliation'],
                 'affiliation_cn': query,
+                'trans_confidence': original_record['trans_confidence'],
                 'state': original_record['state'],
                 'city': original_record['city'],
                 'candidates': candidates
@@ -500,7 +520,7 @@ def step_3_candidate_matching(config: Config):
         ai_meta_input_df.to_parquet(config.AI_META_INPUT_FILE, index=False)
         logger.info(f"生成 {len(ai_meta_input_df)} 条模糊匹配候选")
     else:
-        pd.DataFrame(columns=['original_id', 'affiliation', 'affiliation_cn', 'state', 'city', 'candidates']).to_parquet(config.AI_META_INPUT_FILE, index=False)
+        pd.DataFrame(columns=['esid', 'data_source', 'nct_id', 'affiliation', 'affiliation_cn', 'trans_confidence','state', 'city', 'candidates']).to_parquet(config.AI_META_INPUT_FILE, index=False)
         logger.info("没有需要AI处理的模糊匹配记录。")
 
     logger.info("STEP 3 完成。")

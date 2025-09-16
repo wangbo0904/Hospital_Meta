@@ -19,17 +19,129 @@ logger = logging.getLogger(__name__)
 shutdown_event = threading.Event()
 
 # --- 提示词 (全局加载，以便其他模块可以导入) ---
+BATCH_CLASSIFY_PROMPT = """
+**# Role**
+You are an expert data validator specializing in medical and academic affiliations from mainland China. Your task is to classify raw affiliation strings into predefined categories based on their content and structure.
+
+**# Core Task**
+For each input string, you must determine if it represents a specific, identifiable medical institution or if it falls into a category of abnormal/non-institutional data.
+
+**# Classification Categories**
+You must assign one of the following exact category tags to each input:
+
+1.  **`Valid Institution`**: The string clearly refers to a specific hospital, medical center, or a university that directly implies a medical school/hospital (e.g., "Peking University"). It should be a concrete, verifiable entity.
+2.  **`Personal Name`**: The string is clearly a person's name (Chinese or English).
+    *   *Examples*: "Min Huang", "Zhang San"
+3.  **`Generic Term`**: The string is a general, non-specific type of institution, lacking a unique geographical or institutional identifier.
+    *   *Examples*: "Maternal and Children Health Care Hospital", "Cancer Hospital", "People's Hospital"
+4.  **`University (Non-Medical Focus)`**: The string refers to a university but does not specify a hospital, medical school, or a department, and is not a university known primarily for medicine.
+    *   *Examples*: "Chongqing Medical University", "Tsinghua University" (Note: While it has a hospital, the string itself is just the university).
+5.  **`Department/Ward`**: The string refers **only** to a clinical department or ward, **without mentioning a specific parent institution**.
+    *   *Examples*: "肿瘤科" (Oncology Department), "Internal Medicine", "Surgical Ward", **"Department of Vascular Ultrasonography"**
+6.  **`Contact Info`**: The string is an email address, phone number, or website URL.
+    *   *Examples*: "huanghq@sysucc.org.cn", "86-10-12345678"
+7.  **`Address`**: The string is a geographical address without a clear institution name.
+    *   *Examples*: "No. 17, Fucheng Road, Haidian District, Beijing"
+8.  **`Irrelevant/Other`**: The string is nonsensical, junk data, or clearly not an affiliation.
+    *   *Examples*: "Not applicable", "---", "12345", "None"
+
+**# Output Format**
+Strictly return a single JSON object with one key: `"classifications"`.
+The value must be an array of objects, each containing:
+*   `"esid"`: The unique numeric ID from the input record. You must copy this value verbatim.
+*   `"affiliation"`: The original, unmodified input string.
+*   `"category"`: One of the exact category tags listed above.
+*   `"reason"`: A brief Chinese explanation for your classification.
+
+**# Example**
+**User Input:**
+```json
+{
+  "inputs": [
+    {
+      "esid": 1001,
+      "affiliation": "The First Affiliated Hospital of Sun Yat-sen University"
+    },
+    {
+      "esid": 1002,
+      "affiliation": "Min Huang"
+    },
+    {
+      "esid": 1003,
+      "affiliation": "Maternal and Children Health Care Hospital"
+    },
+    {
+      "esid": 1004,
+      "affiliation": "Chongqing Medical University"
+    },
+    {
+      "esid": 1005,
+      "affiliation": "huanghq@sysucc.org.cn"
+    },
+    {
+      "esid": 1006,
+      "affiliation": "肿瘤科"
+    }
+  ]
+}
+```
+
+Your Expected Output:
+```json
+{
+  "classifications": [
+    {
+      "esid": 1001,
+      "affiliation": "The First Affiliated Hospital of Sun Yat-sen University",
+      "category": "Valid Institution",
+      "reason": "这是一个完整的、可识别的医疗机构名称。"
+    },
+    {
+      "esid": 1002,
+      "affiliation": "Min Huang",
+      "category": "Personal Name",
+      "reason": "这是一个典型的人名格式。"
+    },
+    {
+      "esid": 1003,
+      "affiliation": "Maternal and Children Health Care Hospital",
+      "category": "Generic Term",
+      "reason": "这是一个通用机构类型，缺少具体的地理或机构限定词。"
+    },
+    {
+      "esid": 1004,
+      "affiliation": "Chongqing Medical University",
+      "category": "University (Non-Medical Focus)",
+      "reason": "这是一个大学名称，而非其附属医院。"
+    },
+    {
+      "esid": 1005,
+      "affiliation": "huanghq@sysucc.org.cn",
+      "category": "Contact Info",
+      "reason": "这是一个标准的电子邮件地址格式。"
+    },
+    {
+      "esid": 1006,
+      "affiliation": "肿瘤科",
+      "category": "Department/Ward",
+      "reason": "这是一个临床科室名称。"
+    }
+  ]
+}
+```
+"""
+
 BATCH_TRANSLATE_PROMPT = """
 **# Role**
 You are a top-tier medical information analysis expert and detective. Your core mission is to use rigorous web investigation to find the **most official and standardized full Chinese name** for each institution.
 
 **# Core Principles (Your Guiding Philosophy)**
 1.  **Evidence is Paramount**: Your final translation must be based on verifiable evidence (e.g., official websites, government directories, authoritative articles).
-2.  **Geographical Context as a Clue, Not a Rule**: **【KEY UPDATE】** The provided `state` and `city` fields are **strong clues** to help you disambiguate, but they might be inaccurate. **Do not infer a hospital's name solely based on the provided location.** The primary evidence must come from matching the `original_input` name itself.
+2.  **Geographical Context as a Clue, Not a Rule**: The provided `state` and `city` fields are **strong clues** to help you disambiguate, but they might be inaccurate. **Do not infer a hospital's name solely based on the provided location.** The primary evidence must come from matching the `original_input` name itself.
 3.  **Strict Translation Rules**: You must follow these specific translation patterns:
     *   `"People's Hospital"` must be translated to **"人民医院"**.
     *   `"Center Hospital"` or `"Central Hospital"` must be translated to **"中心医院"**.
-4.  **Label All Inferences**: If you cannot find direct, authoritative evidence for a translation and must rely on inference (e.g., from pinyin or structural translation), you **must** append `(推测)` to the end of the Chinese name.
+    *   `"Municipal Hospital"` must be translated to **"市立医院"**.
 
 **# Task and Workflow: An Expert's Verification Process**
 For each input, find the best possible Chinese name.
@@ -44,8 +156,8 @@ For each input, find the best possible Chinese name.
 
 **Step 3: Evidence Evaluation and Final Confirmation.**
    - Evaluate the search results from authoritative sources.
-   - **If you find Tier 1 or Tier 2 evidence** that directly links the `original_input` to a specific Chinese name, use that name.
-   - **If evidence is weak or non-existent**, construct the most plausible name based on structure and pinyin, but remember to **append `(推测)`**.
+   - **If you find Tier 1 or Tier 2 evidence** that directly links the original_input to a specific Chinese name, use that name with High confidence.
+   - **If evidence is weak or non-existent**, construct the most plausible name based on structure and pinyin, but use Low confidence.
 
 **# Example**
 
@@ -54,19 +166,19 @@ For each input, find the best possible Chinese name.
 {
   "inputs": [
     {
-      "original_id": 101,
+      "esid": f8c95c69c563c86ec576b0ce4e660cfd,
       "original_input": "The First Hospital Of Yulin",
       "state": "Shaanxi",
       "city": "Yulin"
     },
     {
-      "original_id": 102,
+      "esid": f8c9471d2f64263e1c9b4761ce4a1203,
       "original_input": "Yulin City first people's hospital",
       "state": "Guangxi Zhuang Autonomous Region",
       "city": "Yulin"
     },
     {
-      "original_id": 103,
+      "esid": f8c944ab49926d47c96c86c3b0164166,
       "original_input": "Anfu Center Hospital",
       "state": "Jiangxi",
       "city": "Ji'an"
@@ -79,30 +191,34 @@ Your Expected Output:
 {
   "translations": [
     {
-      "original_id": 101,
+      "esid": f8c95c69c563c86ec576b0ce4e660cfd,
       "original_input": "The First Hospital Of Yulin",
       "state": "Shaanxi",
       "city": "Yulin",
-      "original_input_zh": "榆林市第一医院"
+      "original_input_zh": "榆林市第一医院",
+      "trans_confidence": "High"
     },
     {
-      "original_id": 102,
+      "esid": f8c9471d2f64263e1c9b4761ce4a1203,
       "original_input": "Yulin City first people's hospital",
       "state": "Guangxi Zhuang Autonomous Region",
       "city": "Yulin",
-      "original_input_zh": "玉林市第一人民医院"
+      "original_input_zh": "玉林市第一人民医院",
+      "trans_confidence": "High"
     },
     {
-      "original_id": 103,
+      "esid": f8c944ab49926d47c96c86c3b0164166,
       "original_input": "Anfu Center Hospital",
       "state": "Jiangxi",
       "city": "Ji'an",
-      "original_input_zh": "安福县中心医院 (推测)"
+      "original_input_zh": "安福县中心医院",
+      "trans_confidence": "Low"
     }
   ]
 }
 ```
 """
+
 BATCH_AI_SELECT_PROMPT = """
 **# Role**
 You are a **Senior Medical Institution Specialist** for mainland China. Your expertise lies in identifying and verifying hospital names, understanding their official designations, common aliases, historical changes, and organizational structures. You are not a simple matcher; you are an expert providing an authoritative judgment based on verified evidence.
@@ -149,7 +265,7 @@ Your output must be a single JSON object containing a `results` list.
 
 Each result object **must** contain the following ten keys:
 
-*   `"original_id"`: [Integer] - The unique numeric ID for the input record.
+*   `"esid"`: [Integer] - The unique numeric ID for the input record.
 *   `"affiliation"`: [String] - The original English or Pinyin institutional name from the input.
 *   `"affiliation_cn"`: [String] - The original Chinese institutional name from the input.
 *   `"state"`: [String] - The original province/state information from the input.
@@ -171,7 +287,7 @@ Each result object **must** contain the following ten keys:
 {
   "results": [
     {
-      "original_id": 12345,
+      "esid": 12345,
       "affiliation": "The First People's Hospital of Liaocheng",
       "affiliation_cn": "聊城市第一人民医院",
       "state": "Shandong",
@@ -185,7 +301,7 @@ Each result object **must** contain the following ten keys:
       "reason": "候选'聊城市人民医院'地理位置一致。经网络搜索，其官网明确提及'聊城市第一人民医院'是其官方名称之一。存在直接的Tier 1证据，因此置信度评为'高'。"
     },
     {
-      "original_id": 67890,
+      "esid": 67890,
       "affiliation": "...",
       "affiliation_cn": "江苏大学附属第三医院",
       "state": "Jiangsu",
@@ -229,88 +345,16 @@ Compare a pair of medical institution names to determine if they represent the s
 7. **Obvious Acronyms/Shortenings**: E.g., "华西医院" vs. "四川大学华西医院".
 8. **Web Search Confirmation**: Both names point to the same hospital.
 
-**# Confidence Level:**
-- "高": Clear, unambiguous evidence (e.g., exact match, official abbreviation).
-- "中": Strong but not conclusive evidence (e.g., common variation, no official confirmation).
-- "低": Weak or ambiguous evidence (e.g., similar names, no clear web confirmation).
-
 **# Output Format:**
 ```json
 {
   "results": [
     {
-      "original_id": 54321,
+      "esid": 54321,
       "pi_site_name": "北医三院",
       "matched_site": "北京大学第三医院",
       "is_same": true,
-      "confidence": "高",
       "reason": "名称包含关系，经搜索验证确认'北医三院'是'北京大学第三医院'的官方简称"
-    }
-  ]
-}
-```
-"""
-BATCH_ARBITRATE_PROMPT = """
-**# Role**
-You are a **Chief Medical Institution Adjudicator**. Your expertise lies in resolving complex discrepancies between institutional data points. Your task is to act as the final authority, making a definitive judgment based on rigorous, evidence-based investigation.
-
-**# Core Principles**
-1.  **Primacy of the Raw Input**: The `affiliation` (the raw input string) and its geographical context (`state`, `city`) are the ultimate source of truth. Your entire analysis must revolve around what *they* most likely represent.
-2.  **Evidence over Proximity**: Do not simply choose the name that looks more similar. You must use web search to find evidence (e.g., official websites, historical names, addresses) to support your conclusion.
-3.  **Acknowledge Ambiguity**: If the raw input is too ambiguous to definitively link to either candidate, you must state this.
-
-**# Task: The Three-Way Arbitration**
-For each input object, you are given:
-- **The Raw Input**: `affiliation` (the original, often English, name) and its location (`state`, `city`).
-- **Candidate A**: `pi_site_name` (the original human-provided Chinese label).
-- **Candidate B**: `matched_site` (a machine-matched Chinese candidate).
-
-You already know that **Candidate A and Candidate B are different entities**. Your task is to decide: **Does the Raw Input (`affiliation`) refer to Candidate A, Candidate B, or neither?**
-
-**# Workflow: A Step-by-Step Arbitration Process**
-1.  **Analyze the Raw Input**: What is the core entity described in the `affiliation`? What is its key geographical location from `state` and `city`?
-2.  **Investigate Candidate A**: Perform a web search using `pi_site_name` and the location. Does the evidence (official English name, aliases, location) for `pi_site_name` strongly align with the Raw Input (`affiliation`)?
-3.  **Investigate Candidate B**: Perform a web search using `matched_site` and the location. Does the evidence for `matched_site` strongly align with the Raw Input (`affiliation`)?
-4.  **Compare and Conclude**: Weigh the evidence for both candidates.
-    - If evidence for one is overwhelmingly stronger, choose that one.
-    - If both are plausible but one is clearly better, choose the better one.
-    - If the Raw Input is ambiguous or refers to a third, different entity, choose "Neither".
-
-**# Output Format and Structure (JSON) - Must be strictly followed**
-Your output must be a single JSON object containing a `results` list.
-
-Each result object **must** contain the following keys:
-
-*   `"original_id"`: [Integer] - Copied verbatim from the input.
-*   `"decision"`: [String] - Your final verdict. Must be one of three exact values: **"pi_site_name"**, **"matched_site"**, or **"neither"**.
-*   `"final_site"`: [String or null] - If your `decision` is "pi_site_name", this field must be the value of `pi_site_name`. If "matched_site", it must be the value of `matched_site`. If "neither", it must be `null`.
-*   `"decision_reason"`: [String] - In Chinese. A detailed explanation of your arbitration process, comparing the evidence for both candidates and justifying your final `decision`.
-
-**# Example**
-**User Input:**
-```json
-{
-  "inputs": [
-    {
-      "original_id": 123,
-      "affiliation": "Cancer Hospital of CAMS",
-      "state": "Beijing",
-      "city": "Beijing",
-      "pi_site_name": "中山大学肿瘤防治中心",
-      "matched_site": "中国医学科学院肿瘤医院"
-    }
-  ]
-}
-```
-Your Expected Output:
-```json
-{
-  "results": [
-    {
-      "original_id": 123,
-      "decision": "matched_site",
-      "final_site": "中国医学科学院肿瘤医院",
-      "decision_reason": "仲裁开始。原始输入'Cancer Hospital of CAMS'是'中国医学科学院肿瘤医院'的常见英文缩写。候选A'中山大学肿瘤防治中心'位于广州，与输入地点'Beijing'不符。候选B'中国医学科学院肿瘤医院'位于北京，且其英文名与输入高度匹配。证据明确指向候选B。因此，最终裁定原始输入指代的是'matched_site'。"
     }
   ]
 }
@@ -335,6 +379,9 @@ class Config:
         self.SITE_DICT_FILE = self.DATA_DIR / "site_dict_0911.parquet"
         
         # --- 中间过程与输出文件 ---
+        self.CLASSIFY_JSONL_FILE = self.RESULTS_DIR / "step0_classification_output.jsonl"
+        self.NORMAL_DATA_FILE = self.RESULTS_DIR / "step0_normal_data.parquet"
+        self.ABNORMAL_DATA_FILE = self.RESULTS_DIR / "step0_abnormal_data.parquet"
         self.MATCHED_EN_FILE = self.RESULTS_DIR / "step1_matched_en.parquet"
         self.UNMATCHED_EN_FILE = self.RESULTS_DIR / "step1_unmatched_en.parquet"
         self.TRANSLATED_JSONL_FILE = self.RESULTS_DIR / "step2_translated.jsonl"
@@ -346,30 +393,34 @@ class Config:
         self.JUDGE_INPUT_FILE = self.RESULTS_DIR / "step4_judge_input.parquet"
         self.FINAL_JUDGE_OUTPUT_JSONL_FILE = self.RESULTS_DIR / "step5_final_judge_output.json"
         self.FINAL_JUDGE_OUTPUT_PARQUET_FILE = self.RESULTS_DIR / "step5_final_judge_output.parquet"
-        self.FINAL_REPORT_TEMPLATE_FILE = self.BASE_DIR / "final_report_template.html"
+        self.FINAL_REPORT_TEMPLATE_FILE = self.BASE_DIR / "template/final_report_template.html"
+        self.FINAL_REPORT_TEMPLATE_NO_STEP5_FILE = self.BASE_DIR / "template/final_report_template_no_step5.html"
         self.FINAL_REPORT_OUTPUT_FILE = self.OUTPUT_REPORT_DIR / "final_comprehensive_report.html"
         self.FINAL_OUTPUT = self.RESULTS_DIR / "step6_final_output.parquet"
-        
+
         # --- 来自您文件的API和模型设置 ---
         self.OPENAI_BASE_URL = "http://116.63.133.80:30660/api/llm/v1"
-        self.OPENAI_API_KEY = "5YWs5YWx5pWw5o2u"
+        self.OPENAI_API_KEY = "5YWs5YWx5pWw5o2uLeS4tOW6ig=="
         self.GENAI_BASE_URL = "https://globalai.vip/"
         self.GENAI_API_KEY = "sk-pF9rUA3j4igwJbP0xQN2izR6jwQGY0ke4xXKBQnUdkHCZtF9"
         self.API_PROJECT = "PI_SITE"
-        self.ORGANIZATION = " "
-        self.TRANSLATE_MODEL = "gemini-2.5-flash-lite-preview-06-17-thinking"
-        self.AI_SELECT_MODEL = "gemini-2.5-flash-lite-preview-06-17-thinking"
-        self.AI_JUDGE_MODEL = "gemini-2.5-flash-lite-preview-06-17-thinking"
-        self.ARBITRATE_MODEL = "global-gemini-2.5-flash"
+        self.ORGANIZATION = "WB"
+        self.CLASSIFY_MODEL = "global-gemini-2.5-flash"
+        self.TRANSLATE_MODEL = "gemini-2.5-flash-nothinking"
+        self.AI_SELECT_MODEL = "gemini-2.5-flash-nothinking"
+        self.AI_JUDGE_MODEL = "gemini-2.5-flash-nothinking"
 
         # --- 来自您文件的性能和速率限制设置 ---
         self.MAX_WORKERS = 30
         self.CALLS_PER_MINUTE = 300
         self.ONE_MINUTE = 60
         self.RETRY_ATTEMPTS = 3
-        self.TRANSLATE_BATCH_SIZE = 100
+
+        self.CLASSIFY_BATCH_SIZE = 100
+        self.TRANSLATE_BATCH_SIZE = 50
         self.AI_SELECT_BATCH_SIZE = 10
         self.AI_JUDGE_BATCH_SIZE = 10
+        self.ARBITRATE_BATCH_SIZE = 10
         self.CANDIDATE_LIMIT = 20
 
     def update_from_ui(self, ui_inputs: dict):

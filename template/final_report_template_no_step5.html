@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>机构名称匹配报告 - 增量数据版</title>
+    <style>
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "PingFang SC", sans-serif; 
+            margin: 0; 
+            background-color: #f8f9fa; 
+            color: #212529; 
+        }
+        .container { 
+            max-width: 95%; 
+            margin: 20px auto; 
+            padding: 20px; 
+            background-color: #fff; 
+            border-radius: 8px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
+        }
+        h1, h2 { 
+            color: #0056b3; 
+            border-bottom: 2px solid #dee2e6; 
+            padding-bottom: 10px; 
+            margin-top: 0; 
+        }
+        .incremental-badge {
+            background: linear-gradient(135deg, #868686, #1c7ed6);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            margin-left: 15px;
+            display: inline-block;
+        }
+        .summary { 
+            display: flex; 
+            flex-wrap: wrap; 
+            justify-content: space-around; 
+            margin-bottom: 30px; 
+            text-align: center; 
+            gap: 15px; 
+        }
+        .summary-box { 
+            padding: 15px; 
+            border-radius: 8px; 
+            flex-basis: 12%; 
+            min-width: 150px; 
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05); 
+            border-left: 5px solid;
+            transition: transform 0.2s ease-in-out;
+        }
+        .summary-box:hover {
+            transform: translateY(-5px);
+        }
+        .summary-box h3 { 
+            margin-top: 0; 
+            font-size: 1em; 
+            color: #495057; 
+        }
+        .summary-box .count { 
+            font-size: 2em; 
+            font-weight: bold; 
+        }
+        .cat-matched { border-color: #2f9e44; background-color: #d3f9d8; }
+        .cat-matched .count { color: #2b8a3e; }
+        .cat-unmatched { border-color: #868686; background-color: #e9ecef; }
+        .cat-unmatched .count { color: #495057; }
+        .cat-abnormal { border-color: #dc3545; background-color: #f8d7da; }
+        .cat-abnormal .count { color: #721c24; }
+        .controls { 
+            margin-bottom: 20px; 
+            display: flex; 
+            flex-wrap: wrap; 
+            gap: 15px; 
+            align-items: center; 
+        }
+        .controls select, .controls input { 
+            padding: 8px 12px; 
+            border: 1px solid #ced4da; 
+            border-radius: 4px; 
+            font-size: 1em; 
+        }
+        .controls input { 
+            flex-grow: 1; 
+            min-width: 250px; 
+        }
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            font-size: 0.9em; 
+            table-layout: fixed; 
+        }
+        th, td { 
+            border: 1px solid #dee2e6; 
+            padding: 10px 12px; 
+            text-align: left; 
+            vertical-align: top; 
+            word-break: break-word; 
+        }
+        thead { 
+            background-color: #f1f3f5; 
+            position: sticky; 
+            top: 0; 
+            z-index: 10; 
+        }
+        th { 
+            font-weight: 600; 
+        }
+        .reason-box { 
+            margin-top: 10px; 
+            border-left: 3px solid; 
+            padding: 8px 10px; 
+            font-size: 0.9em; 
+            border-radius: 3px; 
+        }
+        .reason-match { border-color: #2f9e44; background-color: #d3f9d8; }
+        .reason-abnormal { border-color: #dc3545; background-color: #f8d7da; }
+        .input-block { 
+            padding: 5px; 
+            border-radius: 4px; 
+            background-color: #f8f9fa; 
+        }
+        .input-block strong { 
+            font-size: 0.9em; 
+            color: #495057; 
+        }
+        .affiliation-block { 
+            background-color: #e3f2fd; 
+            border-left: 3px solid #2196f3; 
+        }
+        .affiliation-cn-block { 
+            background-color: #e8f5e8; 
+            border-left: 3px solid #4caf50; 
+        }
+        .confidence-block { 
+            background-color: #f0f4c3; 
+            border-left: 3px solid #c0ca33; 
+            text-align: center; 
+            font-weight: bold; 
+            padding: 5px; 
+            border-radius: 4px; 
+        }
+        .trans-confidence-block { 
+            background-color: #e1bee7; 
+            border-left: 3px solid #ab47bc; 
+            text-align: center; 
+            font-weight: bold; 
+            padding: 5px; 
+            border-radius: 4px; 
+        }
+        .confidence-na { 
+            color: #999; 
+        }
+        .final-decision { 
+            font-weight: bold; 
+            padding: 5px 8px; 
+            border-radius: 4px; 
+            display: inline-block; 
+            margin-top: 8px; 
+            color: white; 
+        }
+        .final-decision.matched { 
+            background-color: #2f9e44; 
+        }
+        .final-decision.unmatched { 
+            background-color: #868686; 
+        }
+        .final-decision.abnormal { 
+            background-color: #dc3545; 
+        }
+        .process-flow {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #1c7ed6;
+        }
+        .process-flow h3 {
+            margin-top: 0;
+            color: #1c7ed6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>机构名称匹配报告 <span class="incremental-badge">增量数据版</span></h1>
+        <div class="process-flow">
+            <h3>📊 报告说明</h3>
+            <p>此报告针对增量数据生成，包含无pi_site_name的记录及异常数据。仅展示原始匹配结果，无需进行AI判断。</p>
+            <p><strong>数据来源:</strong> <code>{{ source_file }}</code></p>
+            <p><strong>报告生成时间:</strong> {{ generation_time }}</p>
+        </div>
+
+        <h2>匹配结果分布</h2>
+        <div class="summary">
+            {% for key, display_name in category_map.items() %}
+            <div class="summary-box cat-{{ key }}">
+                <h3>{{ display_name }}</h3>
+                <div class="count">{{ counts[display_name] }}</div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <h2>详细匹配结果 (共 {{ total_rows }} 条)</h2>
+        <div class="controls">
+            <select id="category-filter">
+                <option value="all" selected>所有状态</option>
+                {% for key, display_name in category_map.items() %}
+                <option value="{{ key }}">{{ display_name }}</option>
+                {% endfor %}
+            </select>
+            <select id="confidence-filter">
+                <option value="所有置信度" selected>所有匹配置信度</option>
+                {% for option in confidence_options %}
+                <option value="{{ option }}">{{ option }}</option>
+                {% endfor %}
+            </select>
+            <select id="trans-confidence-filter">
+                <option value="所有置信度" selected>所有翻译置信度</option>
+                {% for option in trans_confidence_options %}
+                <option value="{{ option }}">{{ option }}</option>
+                {% endfor %}
+            </select>
+            <input type="text" id="search-input" placeholder="实时搜索表格内容...">
+        </div>
+
+        <div style="overflow-x:auto; max-height: 80vh;">
+            <table id="results-table">
+                <thead>
+                    <tr>
+                        <th style="width: 5%;">ID</th>
+                        <th style="width: 25%;">原始输入</th>
+                        <th style="width: 10%;">翻译置信度</th>
+                        <th style="width: 30%;">匹配过程 & AI理由</th>
+                        <th style="width: 10%;">匹配置信度</th>
+                        <th style="width: 20%;">匹配结果</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{ table_body_html | safe }}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const searchInput = document.getElementById('search-input');
+        const categoryFilter = document.getElementById('category-filter');
+        const confidenceFilter = document.getElementById('confidence-filter');
+        const transConfidenceFilter = document.getElementById('trans-confidence-filter');
+        const table = document.getElementById('results-table');
+        const rows = table.querySelectorAll('tbody tr');
+
+        function filterAndSearch() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const categoryTerm = categoryFilter.value;
+            const confidenceTerm = confidenceFilter.value;
+            const transConfidenceTerm = transConfidenceFilter.value;
+
+            rows.forEach(row => {
+                const category = row.getAttribute('data-category');
+                const confidence = row.getAttribute('data-confidence') || 'N/A';
+                const transConfidence = row.getAttribute('data-trans-confidence') || 'N/A';
+                const rowText = row.textContent.toLowerCase();
+
+                const categoryMatch = categoryTerm === 'all' || category === categoryTerm;
+                const confidenceMatch = confidenceTerm === 'all' || confidence === confidenceTerm;
+                const transConfidenceMatch = transConfidenceTerm === 'all' || transConfidence === transConfidenceTerm;
+                const searchMatch = searchTerm === '' || rowText.includes(searchTerm);
+
+                if (categoryMatch && confidenceMatch && transConfidenceMatch && searchMatch) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+
+        window.addEventListener('load', filterAndSearch);
+        searchInput.addEventListener('keyup', filterAndSearch);
+        categoryFilter.addEventListener('change', filterAndSearch);
+        confidenceFilter.addEventListener('change', filterAndSearch);
+        transConfidenceFilter.addEventListener('change', filterAndSearch);
+    </script>
+</body>
+</html>
